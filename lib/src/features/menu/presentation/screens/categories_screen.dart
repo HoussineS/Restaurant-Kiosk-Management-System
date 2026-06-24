@@ -16,15 +16,7 @@ class CategoriesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesState = ref.watch(categoriesControllerProvider);
 
-    return AdminScaffold(
-      selectedIndex: 0,
-      onDestinationSelected: (index) {
-        if (index == 1) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute<void>(builder: (_) => const ProductsScreen()),
-          );
-        }
-      },
+    return AdminPageLayout(
       title: 'Category Management',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openCategoryDialog(context, ref),
@@ -57,8 +49,17 @@ class CategoriesScreen extends ConsumerWidget {
                     horizontal: 20,
                     vertical: 10,
                   ),
-                  leading: CircleAvatar(
-                    child: Text(category.name.characters.first.toUpperCase()),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      'https://picsum.photos/seed/${category.name.replaceAll(' ', '')}/100/100',
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => CircleAvatar(
+                        child: Text(category.name.characters.first.toUpperCase()),
+                      ),
+                    ),
                   ),
                   title: Text(category.name),
                   subtitle: Text('Category ID: ${category.id ?? '-'}'),

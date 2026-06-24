@@ -20,15 +20,7 @@ class ProductsScreen extends ConsumerWidget {
     final productsState = ref.watch(productsControllerProvider);
     final categoriesState = ref.watch(categoriesControllerProvider);
 
-    return AdminScaffold(
-      selectedIndex: 1,
-      onDestinationSelected: (index) {
-        if (index == 0) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute<void>(builder: (_) => const CategoriesScreen()),
-          );
-        }
-      },
+    return AdminPageLayout(
       title: 'Product Management',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: categoriesState.maybeWhen(
@@ -223,7 +215,10 @@ class _ProductCard extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: 1,
-            child: _ProductImage(imagePath: product.imagePath),
+            child: _ProductImage(
+              imagePath: product.imagePath,
+              productName: product.name,
+            ),
           ),
           Expanded(
             child: Padding(
@@ -300,20 +295,25 @@ class _ProductCard extends StatelessWidget {
 }
 
 class _ProductImage extends StatelessWidget {
-  const _ProductImage({this.imagePath});
+  const _ProductImage({this.imagePath, required this.productName});
 
   final String? imagePath;
+  final String productName;
 
   @override
   Widget build(BuildContext context) {
     final imagePath = this.imagePath;
     if (imagePath == null || !File(imagePath).existsSync()) {
-      return ColoredBox(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.fastfood,
-          size: 40,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+      return Image.network(
+        'https://picsum.photos/seed/${productName.replaceAll(' ', '')}/400/400',
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => ColoredBox(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Icon(
+            Icons.fastfood,
+            size: 40,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       );
     }

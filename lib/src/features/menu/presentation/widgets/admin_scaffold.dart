@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 
-class AdminScaffold extends StatelessWidget {
-  const AdminScaffold({
-    super.key,
-    required this.selectedIndex,
-    required this.onDestinationSelected,
-    required this.title,
-    required this.child,
-    this.floatingActionButton,
-  });
+import '../screens/categories_screen.dart';
+import '../screens/products_screen.dart';
 
-  final int selectedIndex;
-  final ValueChanged<int> onDestinationSelected;
-  final String title;
-  final Widget child;
-  final Widget? floatingActionButton;
+class AdminScaffold extends StatefulWidget {
+  const AdminScaffold({super.key});
+
+  @override
+  State<AdminScaffold> createState() => _AdminScaffoldState();
+}
+
+class _AdminScaffoldState extends State<AdminScaffold> {
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +19,7 @@ class AdminScaffold extends StatelessWidget {
       body: Row(
         children: [
           NavigationRail(
-            selectedIndex: selectedIndex,
+            selectedIndex: _selectedIndex,
             minWidth: 88,
             labelType: NavigationRailLabelType.all,
             leading: Padding(
@@ -44,37 +41,94 @@ class AdminScaffold extends StatelessWidget {
                 label: Text('Products'),
               ),
             ],
-            onDestinationSelected: onDestinationSelected,
+            onDestinationSelected: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
           ),
           const VerticalDivider(width: 1),
           Expanded(
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Manage the restaurant menu used by the kiosk.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Expanded(child: child),
-                  ],
-                ),
-              ),
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: const [CategoriesScreen(), ProductsScreen()],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class AdminPageLayout extends StatelessWidget {
+  const AdminPageLayout({
+    super.key,
+    required this.title,
+    required this.child,
+    this.floatingActionButton,
+  });
+
+  final String title;
+  final Widget child;
+  final Widget? floatingActionButton;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
       floatingActionButton: floatingActionButton,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 120,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  image: const DecorationImage(
+                    image: AssetImage("assets/images/product_manage_icon.png"),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.6),
+                      ],
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  alignment: Alignment.bottomLeft,
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Manage the restaurant menu used by the kiosk.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(child: child),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

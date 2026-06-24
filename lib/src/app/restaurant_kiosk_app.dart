@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../features/menu/presentation/screens/categories_screen.dart';
+import '../features/menu/presentation/widgets/admin_scaffold.dart';
 import 'theme/app_theme.dart';
 
 class RestaurantKioskApp extends StatelessWidget {
@@ -13,8 +13,8 @@ class RestaurantKioskApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      home: const CategoriesScreen(),
+      themeMode: ThemeMode.light,
+      home: const AdminScaffold(),
     );
   }
 }
