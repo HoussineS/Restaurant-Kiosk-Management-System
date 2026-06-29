@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/categories_screen.dart';
 import '../screens/products_screen.dart';
+import '../../../orders/presentation/screens/orders_screen.dart';
 
 class AdminScaffold extends StatefulWidget {
   const AdminScaffold({super.key});
@@ -31,6 +32,11 @@ class _AdminScaffoldState extends State<AdminScaffold> {
             ),
             destinations: const [
               NavigationRailDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long),
+                label: Text('Orders'),
+              ),
+              NavigationRailDestination(
                 icon: Icon(Icons.category_outlined),
                 selectedIcon: Icon(Icons.category),
                 label: Text('Categories'),
@@ -51,9 +57,14 @@ class _AdminScaffoldState extends State<AdminScaffold> {
           Expanded(
             child: IndexedStack(
               index: _selectedIndex,
-              children: const [CategoriesScreen(), ProductsScreen()],
+              children: const [
+                OrdersScreen(),
+                CategoriesScreen(),
+                ProductsScreen(),
+              ],
             ),
           ),
+
         ],
       ),
     );

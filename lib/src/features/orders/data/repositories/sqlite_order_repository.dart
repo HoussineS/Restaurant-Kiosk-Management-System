@@ -36,4 +36,7 @@ class SqliteOrderRepository implements OrderRepository {
   @override
   Future<void> updateOrderStatus(int orderId, OrderStatus status) =>
       _dataSource.updateOrderStatus(orderId, status);
+
+  @override
+  Future<void> deleteOrder(int orderId) => _dataSource.deleteOrder(orderId);
 }

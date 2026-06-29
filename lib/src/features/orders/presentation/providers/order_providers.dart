@@ -162,6 +162,14 @@ class OrdersController extends AsyncNotifier<List<Order>> {
       return _repository.getOrders();
     });
   }
+
+  Future<void> deleteOrder(int orderId) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await _repository.deleteOrder(orderId);
+      return _repository.getOrders();
+    });
+  }
 }
 
 final ordersControllerProvider =

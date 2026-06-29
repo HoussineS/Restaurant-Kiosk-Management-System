@@ -100,4 +100,13 @@ class OrderLocalDataSource {
       whereArgs: [orderId],
     );
   }
+
+  Future<void> deleteOrder(int orderId) async {
+    final database = await _appDatabase.database;
+    await database.delete(
+      'orders',
+      where: 'id = ?',
+      whereArgs: [orderId],
+    );
+  }
 }

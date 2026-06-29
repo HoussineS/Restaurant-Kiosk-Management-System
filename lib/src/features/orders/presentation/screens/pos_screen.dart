@@ -6,42 +6,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../menu/domain/entities/menu_category.dart';
 import '../../../menu/domain/entities/product.dart';
 import '../../../menu/presentation/providers/menu_providers.dart';
-import '../../../menu/presentation/screens/categories_screen.dart';
-import '../../../orders/domain/entities/order.dart';
-import '../../../orders/presentation/providers/order_providers.dart';
+import '../../domain/entities/order.dart';
+import '../providers/order_providers.dart';
 
 // No local StateProvider needed — selectedCategoryProvider lives in order_providers.dart
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CustomerKioskScreen
+// PosScreen
 // ─────────────────────────────────────────────────────────────────────────────
 
-class CustomerKioskScreen extends ConsumerWidget {
-  const CustomerKioskScreen({super.key});
+class PosScreen extends ConsumerWidget {
+  const PosScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
-      body: Column(
-        children: [
-          _KioskHeader(
-            onAdminTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const CategoriesScreen(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const _PosHeader(),
+            const Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 7, child: _MenuPane()),
+                  SizedBox(width: 340, child: _CartPane()),
+                ],
               ),
             ),
-          ),
-          const Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 7, child: _MenuPane()),
-                SizedBox(width: 340, child: _CartPane()),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -49,10 +44,8 @@ class CustomerKioskScreen extends ConsumerWidget {
 
 // ─── Header ───────────────────────────────────────────────────────────────────
 
-class _KioskHeader extends StatelessWidget {
-  const _KioskHeader({required this.onAdminTap});
-
-  final VoidCallback onAdminTap;
+class _PosHeader extends StatelessWidget {
+  const _PosHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -62,21 +55,20 @@ class _KioskHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          const Icon(Icons.restaurant_menu, size: 32, color: Colors.black87),
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back),
+            tooltip: 'Back to Orders',
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.point_of_sale, size: 32, color: Colors.black87),
           const SizedBox(width: 12),
           Text(
-            'Our Menu',
+            'New Order (POS)',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
-          ),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: onAdminTap,
-            icon: const Icon(Icons.admin_panel_settings_outlined, size: 18),
-            label: const Text('Admin'),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
           ),
         ],
       ),
