@@ -245,12 +245,80 @@ class _ProductGrid extends ConsumerWidget {
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
+        final product = products[index];
         return _ProductCard(
-          product: products[index],
-          onAdd: () =>
-              ref.read(cartProvider.notifier).addProduct(products[index]),
+          product: product,
+          onAdd: () async {
+            if (product.modifiers.isNotEmpty) {
+              final chosenModifiers = await _showModifiersDialog(context, product);
+              if (chosenModifiers != null) {
+                ref.read(cartProvider.notifier).addProduct(product, chosenModifiers: chosenModifiers);
+              }
+            } else {
+              ref.read(cartProvider.notifier).addProduct(product);
+            }
+          },
         );
       },
+    );
+  }
+
+  Future<List<ProductModifier>?> _showModifiersDialog(BuildContext context, Product product) {
+    return showDialog<List<ProductModifier>>(
+      context: context,
+      builder: (context) => _ModifiersDialog(product: product),
+    );
+  }
+}
+
+class _ModifiersDialog extends StatefulWidget {
+  const _ModifiersDialog({required this.product});
+  final Product product;
+
+  @override
+  State<_ModifiersDialog> createState() => _ModifiersDialogState();
+}
+
+class _ModifiersDialogState extends State<_ModifiersDialog> {
+  final Set<ProductModifier> _selectedModifiers = {};
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Customize ${widget.product.name}'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: widget.product.modifiers.map((mod) {
+            final isSelected = _selectedModifiers.contains(mod);
+            return CheckboxListTile(
+              title: Text(mod.name),
+              subtitle: mod.extraPrice > 0 ? Text('+\$${mod.extraPrice.toStringAsFixed(2)}') : null,
+              value: isSelected,
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    _selectedModifiers.add(mod);
+                  } else {
+                    _selectedModifiers.remove(mod);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(_selectedModifiers.toList()),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
+          child: const Text('Add to Order'),
+        ),
+      ],
     );
   }
 }
@@ -393,17 +461,42 @@ class _ProductImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = imagePath;
-    if (path != null && File(path).existsSync()) {
-      return Image.file(File(path), fit: BoxFit.cover);
+    if (imagePath == null || imagePath!.isEmpty) {
+      return const _PlaceholderImage();
     }
-    return Image.network(
-      'https://picsum.photos/seed/${productName.replaceAll(' ', '')}/400/400',
+
+    if (imagePath!.startsWith('http://') || imagePath!.startsWith('https://')) {
+      return Image.network(
+        imagePath!,
+        width: double.infinity,
+        height: 140,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const _PlaceholderImage(),
+      );
+    }
+
+    final file = File(imagePath!);
+    if (!file.existsSync()) {
+      return const _PlaceholderImage();
+    }
+
+    return Image.file(
+      file,
+      width: double.infinity,
+      height: 140,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Container(
-        color: Colors.grey.shade100,
-        child: const Icon(Icons.fastfood, size: 48, color: Colors.black26),
-      ),
+      errorBuilder: (_, __, ___) => const _PlaceholderImage(),
+    );
+  }
+}
+
+class _PlaceholderImage extends StatelessWidget {
+  const _PlaceholderImage();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.grey.shade100,
+      child: const Icon(Icons.fastfood, size: 48, color: Colors.black26),
     );
   }
 }
@@ -447,15 +540,9 @@ class _CartPane extends ConsumerWidget {
                 ),
                 const Spacer(),
                 if (items.isNotEmpty)
-                  TextButton(
-                    onPressed: () => ref.read(cartProvider.notifier).clear(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red.shade400,
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text('Clear all'),
+                  IconButton(
+                    onPressed: () => ref.read(cartProvider.notifier).clearCart(),
+                    icon: const Icon(Icons.delete_outline),
                   ),
               ],
             ),
@@ -467,12 +554,15 @@ class _CartPane extends ConsumerWidget {
             child: items.isEmpty
                 ? _EmptyCartMessage()
                 : ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     itemCount: items.length,
-                    separatorBuilder: (_, __) =>
-                        const Divider(height: 1, indent: 20, endIndent: 20),
-                    itemBuilder: (context, index) =>
-                        _CartItemTile(item: items[index]),
+                    separatorBuilder: (_, __) => const Divider(height: 32),
+                    itemBuilder: (context, index) {
+                      return _CartItemTile(
+                        index: index,
+                        item: items[index],
+                      );
+                    },
                   ),
           ),
 
@@ -497,7 +587,7 @@ class _CartPane extends ConsumerWidget {
         .placeOrder(items);
 
     if (order != null) {
-      ref.read(cartProvider.notifier).clear();
+      ref.read(cartProvider.notifier).clearCart();
       if (context.mounted) {
         _showSuccessDialog(context, order);
       }
@@ -609,83 +699,69 @@ class _EmptyCartMessage extends StatelessWidget {
 }
 
 class _CartItemTile extends ConsumerWidget {
-  const _CartItemTile({required this.item});
+  const _CartItemTile({required this.index, required this.item});
 
+  final int index;
   final OrderItem item;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(cartProvider.notifier);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.productName,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '\$${item.unitPrice.toStringAsFixed(2)} each',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Quantity control
-          Row(
+    
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _QtyBtn(
-                icon: Icons.remove,
-                onTap: () => notifier.decreaseQuantity(item.productId),
+              Text(
+                item.productName,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
-              SizedBox(
-                width: 28,
-                child: Text(
-                  '${item.quantity}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+              if (item.modifiers.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                ...item.modifiers.map((mod) => Text(
+                  '+ ${mod.name} (\$${mod.extraPrice.toStringAsFixed(2)})',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                )),
+              ],
+              const SizedBox(height: 4),
+              Text(
+                '\$${item.subtotal.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w600,
                 ),
-              ),
-              _QtyBtn(
-                icon: Icons.add,
-                onTap: () => notifier.increaseQuantity(item.productId),
               ),
             ],
           ),
-          const SizedBox(width: 12),
-          // Line total
-          SizedBox(
-            width: 54,
-            child: Text(
-              '\$${item.subtotal.toStringAsFixed(2)}',
-              textAlign: TextAlign.end,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: Colors.black,
+        ),
+        const SizedBox(width: 12),
+        Row(
+          children: [
+            _QtyBtn(
+              icon: Icons.remove,
+              onTap: () => notifier.decreaseQuantity(index),
+            ),
+            SizedBox(
+              width: 32,
+              child: Text(
+                '${item.quantity}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+            _QtyBtn(
+              icon: Icons.add,
+              onTap: () => notifier.increaseQuantity(index),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

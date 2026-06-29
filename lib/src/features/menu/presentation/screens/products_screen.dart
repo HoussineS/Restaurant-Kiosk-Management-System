@@ -301,32 +301,40 @@ class _ProductImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = this.imagePath;
-    if (imagePath == null || !File(imagePath).existsSync()) {
-      return Image.network(
-        'https://picsum.photos/seed/${productName.replaceAll(' ', '')}/400/400',
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => ColoredBox(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: Icon(
-            Icons.fastfood,
-            size: 40,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+    final path = imagePath;
+
+    Widget placeholder() {
+      return ColoredBox(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        child: Icon(
+          Icons.fastfood,
+          size: 40,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       );
     }
 
+    if (path == null || path.isEmpty) {
+      return placeholder();
+    }
+
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return Image.network(
+        path,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => placeholder(),
+      );
+    }
+
+    final file = File(path);
+    if (!file.existsSync()) {
+      return placeholder();
+    }
+
     return Image.file(
-      File(imagePath),
+      file,
       fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => ColoredBox(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.broken_image_outlined,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
+      errorBuilder: (_, __, ___) => placeholder(),
     );
   }
 }

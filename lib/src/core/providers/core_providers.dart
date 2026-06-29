@@ -4,7 +4,7 @@ import '../database/app_database.dart';
 import '../services/local_image_storage.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  return AppDatabase();
+  return AppDatabase.instance;
 });
 
 final localImageStorageProvider = Provider<LocalImageStorage>((ref) {

@@ -37,7 +37,22 @@ class OrderLocalDataSource {
           'quantity': item.quantity,
           'unit_price': item.unitPrice,
         });
-        savedItems.add(item.copyWith(id: itemId, orderId: orderId));
+
+        final savedModifiers = <OrderItemModifier>[];
+        for (final mod in item.modifiers) {
+          final modId = await txn.insert('order_item_modifiers', {
+            'order_item_id': itemId,
+            'name': mod.name,
+            'extra_price': mod.extraPrice,
+          });
+          savedModifiers.add(mod.copyWith(id: modId, orderItemId: itemId));
+        }
+
+        savedItems.add(item.copyWith(
+          id: itemId, 
+          orderId: orderId,
+          modifiers: savedModifiers,
+        ));
       }
 
       return Order(
@@ -67,16 +82,33 @@ class OrderLocalDataSource {
         whereArgs: [orderId],
       );
 
-      final items = itemRows.map((r) {
-        return OrderItem(
-          id: r['id'] as int,
+      final items = <OrderItem>[];
+      for (final r in itemRows) {
+        final itemId = r['id'] as int;
+        
+        final modifierRows = await database.query(
+          'order_item_modifiers',
+          where: 'order_item_id = ?',
+          whereArgs: [itemId],
+        );
+        
+        final modifiers = modifierRows.map((m) => OrderItemModifier(
+          id: m['id'] as int,
+          orderItemId: itemId,
+          name: m['name'] as String,
+          extraPrice: (m['extra_price'] as num).toDouble(),
+        )).toList();
+
+        items.add(OrderItem(
+          id: itemId,
           orderId: orderId,
           productId: r['product_id'] as int,
           productName: r['product_name'] as String,
           quantity: r['quantity'] as int,
           unitPrice: r['unit_price'] as double,
-        );
-      }).toList();
+          modifiers: modifiers,
+        ));
+      }
 
       orders.add(Order(
         id: orderId,

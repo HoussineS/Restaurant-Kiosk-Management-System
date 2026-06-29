@@ -28,6 +28,34 @@ enum OrderStatus {
   }
 }
 
+class OrderItemModifier {
+  const OrderItemModifier({
+    this.id,
+    this.orderItemId,
+    required this.name,
+    required this.extraPrice,
+  });
+
+  final int? id;
+  final int? orderItemId;
+  final String name;
+  final double extraPrice;
+
+  OrderItemModifier copyWith({
+    int? id,
+    int? orderItemId,
+    String? name,
+    double? extraPrice,
+  }) {
+    return OrderItemModifier(
+      id: id ?? this.id,
+      orderItemId: orderItemId ?? this.orderItemId,
+      name: name ?? this.name,
+      extraPrice: extraPrice ?? this.extraPrice,
+    );
+  }
+}
+
 class OrderItem {
   const OrderItem({
     this.id,
@@ -36,6 +64,7 @@ class OrderItem {
     required this.productName,
     required this.quantity,
     required this.unitPrice,
+    this.modifiers = const [],
   });
 
   final int? id;
@@ -44,8 +73,12 @@ class OrderItem {
   final String productName;
   final int quantity;
   final double unitPrice;
+  final List<OrderItemModifier> modifiers;
 
-  double get subtotal => unitPrice * quantity;
+  double get subtotal {
+    final modifiersTotal = modifiers.fold(0.0, (sum, mod) => sum + mod.extraPrice);
+    return (unitPrice + modifiersTotal) * quantity;
+  }
 
   OrderItem copyWith({
     int? id,
@@ -54,6 +87,7 @@ class OrderItem {
     String? productName,
     int? quantity,
     double? unitPrice,
+    List<OrderItemModifier>? modifiers,
   }) {
     return OrderItem(
       id: id ?? this.id,
@@ -62,6 +96,7 @@ class OrderItem {
       productName: productName ?? this.productName,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
+      modifiers: modifiers ?? this.modifiers,
     );
   }
 }

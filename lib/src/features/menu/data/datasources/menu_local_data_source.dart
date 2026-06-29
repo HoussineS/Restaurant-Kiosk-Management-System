@@ -1,6 +1,7 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../domain/entities/product.dart';
 import '../models/menu_category_model.dart';
 import '../models/product_model.dart';
 
@@ -55,8 +56,30 @@ class MenuLocalDataSource {
   Future<List<ProductModel>> getProducts() async {
     final database = await _appDatabase.database;
     final rows = await database.query('products', orderBy: 'name ASC');
-    return rows.map(ProductModel.fromMap).toList();
+    final modifiersRows = await database.query('product_modifiers');
+
+    // Group modifiers by product_id
+    final Map<int, List<ProductModifier>> modifiersMap = {};
+    for (final row in modifiersRows) {
+      final productId = row['product_id'] as int;
+      final modifier = ProductModifier(
+        id: row['id'] as int?,
+        productId: productId,
+        name: row['name'] as String,
+        extraPrice: (row['extra_price'] as num).toDouble(),
+      );
+      modifiersMap.putIfAbsent(productId, () => []).add(modifier);
+    }
+
+    return rows.map((row) {
+      final productId = row['id'] as int;
+      return ProductModel.fromMap(
+        row,
+        modifiers: modifiersMap[productId] ?? [],
+      );
+    }).toList();
   }
+
 
   Future<ProductModel> createProduct(ProductModel product) async {
     final database = await _appDatabase.database;

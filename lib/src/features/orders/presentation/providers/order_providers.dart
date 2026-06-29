@@ -23,11 +23,25 @@ class CartNotifier extends Notifier<List<OrderItem>> {
   @override
   List<OrderItem> build() => [];
 
-  void addProduct(Product product) {
+  void addProduct(Product product, {List<ProductModifier> chosenModifiers = const []}) {
     final productId = product.id;
     if (productId == null) return;
 
-    final existingIndex = state.indexWhere((i) => i.productId == productId);
+    final orderItemModifiers = chosenModifiers.map((m) => OrderItemModifier(
+      name: m.name,
+      extraPrice: m.extraPrice,
+    )).toList();
+
+    // Check if an exact match (same product & same modifiers) exists
+    final existingIndex = state.indexWhere((i) {
+      if (i.productId != productId) return false;
+      if (i.modifiers.length != orderItemModifiers.length) return false;
+      // Simple name check is enough for equality here
+      final existingNames = i.modifiers.map((m) => m.name).toSet();
+      final newNames = orderItemModifiers.map((m) => m.name).toSet();
+      return existingNames.containsAll(newNames) && newNames.containsAll(existingNames);
+    });
+
     if (existingIndex >= 0) {
       final updated = state[existingIndex].copyWith(
         quantity: state[existingIndex].quantity + 1,
@@ -42,39 +56,38 @@ class CartNotifier extends Notifier<List<OrderItem>> {
           productName: product.name,
           quantity: 1,
           unitPrice: product.price,
+          modifiers: orderItemModifiers,
         ),
       ];
     }
   }
 
-  void increaseQuantity(int productId) {
-    state = state.map((item) {
-      if (item.productId == productId) {
-        return item.copyWith(quantity: item.quantity + 1);
-      }
-      return item;
-    }).toList();
+  void increaseQuantity(int index) {
+    if (index < 0 || index >= state.length) return;
+    final item = state[index];
+    final updated = item.copyWith(quantity: item.quantity + 1);
+    state = [...state]..[index] = updated;
   }
 
-  void decreaseQuantity(int productId) {
-    final item = state.firstWhere((i) => i.productId == productId);
-    if (item.quantity <= 1) {
-      removeItem(productId);
+  void decreaseQuantity(int index) {
+    if (index < 0 || index >= state.length) return;
+    final item = state[index];
+    if (item.quantity > 1) {
+      final updated = item.copyWith(quantity: item.quantity - 1);
+      state = [...state]..[index] = updated;
     } else {
-      state = state.map((i) {
-        if (i.productId == productId) {
-          return i.copyWith(quantity: i.quantity - 1);
-        }
-        return i;
-      }).toList();
+      removeItem(index);
     }
   }
 
-  void removeItem(int productId) {
-    state = state.where((i) => i.productId != productId).toList();
+  void removeItem(int index) {
+    if (index < 0 || index >= state.length) return;
+    final newState = [...state];
+    newState.removeAt(index);
+    state = newState;
   }
 
-  void clear() {
+  void clearCart() {
     state = [];
   }
 }

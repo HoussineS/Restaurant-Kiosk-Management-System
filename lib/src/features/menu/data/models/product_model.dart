@@ -9,7 +9,9 @@ class ProductModel {
     required this.price,
     required this.available,
     this.imagePath,
+    this.modifiers = const [],
   });
+
 
   final int? id;
   final int categoryId;
@@ -18,6 +20,7 @@ class ProductModel {
   final double price;
   final bool available;
   final String? imagePath;
+  final List<ProductModifier> modifiers;
 
   factory ProductModel.fromEntity(Product product) {
     return ProductModel(
@@ -28,10 +31,11 @@ class ProductModel {
       price: product.price,
       available: product.available,
       imagePath: product.imagePath,
+      modifiers: product.modifiers,
     );
   }
 
-  factory ProductModel.fromMap(Map<String, Object?> map) {
+  factory ProductModel.fromMap(Map<String, Object?> map, {List<ProductModifier> modifiers = const []}) {
     return ProductModel(
       id: map['id'] as int?,
       categoryId: map['category_id'] as int,
@@ -40,6 +44,7 @@ class ProductModel {
       price: (map['price'] as num).toDouble(),
       available: (map['available'] as int) == 1,
       imagePath: map['image_path'] as String?,
+      modifiers: modifiers,
     );
   }
 
@@ -52,6 +57,7 @@ class ProductModel {
       price: price,
       available: available,
       imagePath: imagePath,
+      modifiers: modifiers,
     );
   }
 
@@ -68,3 +74,4 @@ class ProductModel {
     };
   }
 }
+
