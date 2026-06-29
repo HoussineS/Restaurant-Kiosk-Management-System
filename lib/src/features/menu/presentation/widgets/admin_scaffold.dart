@@ -89,7 +89,7 @@ class AdminPageLayout extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   image: const DecorationImage(
-                    image: AssetImage("assets/images/product_manage_icon.png"),
+                    image: NetworkImage('https://images.unsplash.com/photo-1495474472204-51860569ac09?q=80&w=1000&auto=format&fit=crop'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -101,7 +101,7 @@ class AdminPageLayout extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.6),
+                        Colors.black.withValues(alpha: 0.6),
                       ],
                     ),
                   ),

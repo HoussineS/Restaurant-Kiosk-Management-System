@@ -36,7 +36,7 @@ abstract final class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0.5,
-        shadowColor: Colors.black.withOpacity(0.2),
+        shadowColor: Colors.black.withValues(alpha: 0.2),
         margin: EdgeInsets.zero,
         color: colorScheme.surface,
         shape: RoundedRectangleBorder(
@@ -54,7 +54,7 @@ abstract final class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(96, 48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          side: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
+          side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
         ),
       ),
     );

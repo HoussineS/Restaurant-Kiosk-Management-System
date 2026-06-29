@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/menu_category.dart';
 import '../../domain/entities/product.dart';
 import '../providers/menu_providers.dart';
-import 'categories_screen.dart';
 import '../widgets/admin_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_panel.dart';

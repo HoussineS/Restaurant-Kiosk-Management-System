@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/menu_category.dart';
 import '../providers/menu_providers.dart';
-import 'products_screen.dart';
 import '../widgets/admin_scaffold.dart';
 import '../widgets/category_form_dialog.dart';
 import '../widgets/empty_state.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../features/menu/presentation/widgets/admin_scaffold.dart';
+import '../features/kiosk/presentation/screens/customer_kiosk_screen.dart';
 import 'theme/app_theme.dart';
 
 class RestaurantKioskApp extends StatelessWidget {
@@ -14,7 +14,7 @@ class RestaurantKioskApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      home: const AdminScaffold(),
+      home: const CustomerKioskScreen(),
     );
   }
 }

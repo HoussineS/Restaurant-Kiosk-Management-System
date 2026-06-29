@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class AppDatabase {
   static const _databaseName = 'restaurant_kiosk.db';
-  static const _databaseVersion = 1;
+  static const _databaseVersion = 2;
 
   Database? _database;
 
@@ -59,8 +59,46 @@ class AppDatabase {
           await database.execute(
             'CREATE INDEX idx_products_category_id ON products(category_id)',
           );
+
+          await _createOrderTables(database);
+        },
+        onUpgrade: (database, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await _createOrderTables(database);
+          }
         },
       ),
     );
   }
+
+  Future<void> _createOrderTables(Database database) async {
+    await database.execute('''
+      CREATE TABLE orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_number TEXT NOT NULL UNIQUE,
+        total_price REAL NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    await database.execute('''
+      CREATE TABLE order_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        product_name TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        unit_price REAL NOT NULL,
+        FOREIGN KEY (order_id)
+          REFERENCES orders (id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await database.execute(
+      'CREATE INDEX idx_order_items_order_id ON order_items(order_id)',
+    );
+  }
 }
+
