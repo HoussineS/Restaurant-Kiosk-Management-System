@@ -22,6 +22,12 @@ class MenuCategoryModel {
   }
 
   Map<String, Object?> toMap() {
-    return {if (id != null) 'id': id, 'name': name};
+    return {
+      if (id != null) 'id': id,
+      'name': name,
+      'icon_name': 'category',
+      'color_value': 0xFF000000,
+      'sort_order': 0,
+    };
   }
 }

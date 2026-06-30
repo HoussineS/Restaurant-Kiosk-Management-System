@@ -70,7 +70,6 @@ class ProductModel {
       'price': price,
       'available': available ? 1 : 0,
       'image_path': imagePath,
-      'updated_at': DateTime.now().toIso8601String(),
     };
   }
 }
