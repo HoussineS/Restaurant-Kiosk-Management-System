@@ -97,7 +97,11 @@ class _MenuPane extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.menu_book_outlined, size: 64, color: Colors.black26),
+                  Icon(
+                    Icons.menu_book_outlined,
+                    size: 64,
+                    color: Colors.black26,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'No menu items yet',
@@ -118,14 +122,17 @@ class _MenuPane extends ConsumerWidget {
           );
         }
 
-        final selectedId = ref.watch(selectedCategoryProvider) ??
+        final selectedId =
+            ref.watch(selectedCategoryProvider) ??
             (categories.isNotEmpty ? categories.first.id : null);
 
         // Keep selectedCategoryProvider seeded with the first category on load.
         if (ref.read(selectedCategoryProvider) == null &&
             categories.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(selectedCategoryProvider.notifier).select(categories.first.id);
+            ref
+                .read(selectedCategoryProvider.notifier)
+                .select(categories.first.id);
           });
         }
 
@@ -147,8 +154,7 @@ class _MenuPane extends ConsumerWidget {
             ),
             Expanded(
               child: productsState.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Error: $e')),
                 data: (_) => _ProductGrid(products: visibleProducts),
               ),
@@ -250,9 +256,14 @@ class _ProductGrid extends ConsumerWidget {
           product: product,
           onAdd: () async {
             if (product.modifiers.isNotEmpty) {
-              final chosenModifiers = await _showModifiersDialog(context, product);
+              final chosenModifiers = await _showModifiersDialog(
+                context,
+                product,
+              );
               if (chosenModifiers != null) {
-                ref.read(cartProvider.notifier).addProduct(product, chosenModifiers: chosenModifiers);
+                ref
+                    .read(cartProvider.notifier)
+                    .addProduct(product, chosenModifiers: chosenModifiers);
               }
             } else {
               ref.read(cartProvider.notifier).addProduct(product);
@@ -263,7 +274,10 @@ class _ProductGrid extends ConsumerWidget {
     );
   }
 
-  Future<List<ProductModifier>?> _showModifiersDialog(BuildContext context, Product product) {
+  Future<List<ProductModifier>?> _showModifiersDialog(
+    BuildContext context,
+    Product product,
+  ) {
     return showDialog<List<ProductModifier>>(
       context: context,
       builder: (context) => _ModifiersDialog(product: product),
@@ -293,7 +307,9 @@ class _ModifiersDialogState extends State<_ModifiersDialog> {
             final isSelected = _selectedModifiers.contains(mod);
             return CheckboxListTile(
               title: Text(mod.name),
-              subtitle: mod.extraPrice > 0 ? Text('+${mod.extraPrice.toStringAsFixed(3)} TND') : null,
+              subtitle: mod.extraPrice > 0
+                  ? Text('+${mod.extraPrice.toStringAsFixed(2)} TND')
+                  : null,
               value: isSelected,
               onChanged: (val) {
                 setState(() {
@@ -314,8 +330,12 @@ class _ModifiersDialogState extends State<_ModifiersDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(_selectedModifiers.toList()),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
+          onPressed: () =>
+              Navigator.of(context).pop(_selectedModifiers.toList()),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+          ),
           child: const Text('Add to Order'),
         ),
       ],
@@ -347,9 +367,10 @@ class _ProductCardState extends State<_ProductCard>
       vsync: this,
       duration: const Duration(milliseconds: 120),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
   }
 
   @override
@@ -420,7 +441,7 @@ class _ProductCardState extends State<_ProductCard>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${p.price.toStringAsFixed(3)} TND',
+                            '${p.price.toStringAsFixed(2)} TND',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -541,7 +562,8 @@ class _CartPane extends ConsumerWidget {
                 const Spacer(),
                 if (items.isNotEmpty)
                   IconButton(
-                    onPressed: () => ref.read(cartProvider.notifier).clearCart(),
+                    onPressed: () =>
+                        ref.read(cartProvider.notifier).clearCart(),
                     icon: const Icon(Icons.delete_outline),
                   ),
               ],
@@ -554,14 +576,14 @@ class _CartPane extends ConsumerWidget {
             child: items.isEmpty
                 ? _EmptyCartMessage()
                 : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     itemCount: items.length,
                     separatorBuilder: (_, __) => const Divider(height: 32),
                     itemBuilder: (context, index) {
-                      return _CartItemTile(
-                        index: index,
-                        item: items[index],
-                      );
+                      return _CartItemTile(index: index, item: items[index]);
                     },
                   ),
           ),
@@ -615,9 +637,9 @@ class _CartPane extends ConsumerWidget {
             const SizedBox(height: 20),
             Text(
               'Order Placed!',
-              style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                ctx,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -635,7 +657,7 @@ class _CartPane extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Total: ${order.totalPrice.toStringAsFixed(3)} TND',
+              'Total: ${order.totalPrice.toStringAsFixed(2)} TND',
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 4),
@@ -658,10 +680,7 @@ class _CartPane extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Done',
-                style: TextStyle(fontSize: 16),
-              ),
+              child: const Text('Done', style: TextStyle(fontSize: 16)),
             ),
           ),
         ],
@@ -677,8 +696,11 @@ class _EmptyCartMessage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.shopping_bag_outlined,
-              size: 56, color: Colors.grey.shade300),
+          Icon(
+            Icons.shopping_bag_outlined,
+            size: 56,
+            color: Colors.grey.shade300,
+          ),
           const SizedBox(height: 12),
           Text(
             'Cart is empty',
@@ -707,7 +729,7 @@ class _CartItemTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(cartProvider.notifier);
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -717,18 +739,23 @@ class _CartItemTile extends ConsumerWidget {
             children: [
               Text(
                 item.productName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
               if (item.modifiers.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                ...item.modifiers.map((mod) => Text(
-                  '+ ${mod.name} (+${mod.extraPrice.toStringAsFixed(3)} TND)',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                )),
+                ...item.modifiers.map(
+                  (mod) => Text(
+                    '+ ${mod.name} (+${mod.extraPrice.toStringAsFixed(2)} TND)',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ),
               ],
               const SizedBox(height: 4),
               Text(
-                '${item.subtotal.toStringAsFixed(3)} TND',
+                '${item.subtotal.toStringAsFixed(2)} TND',
                 style: TextStyle(
                   color: Colors.grey.shade700,
                   fontWeight: FontWeight.w600,
@@ -812,7 +839,7 @@ class _CartFooter extends StatelessWidget {
             children: [
               Text('Total', style: TextStyle(color: Colors.grey.shade600)),
               Text(
-                '${total.toStringAsFixed(3)} TND',
+                '${total.toStringAsFixed(2)} TND',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,

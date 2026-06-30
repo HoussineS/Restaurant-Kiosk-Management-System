@@ -266,7 +266,7 @@ class _ProductCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '${product.price.toStringAsFixed(3)} TND',
+                          '${product.price.toStringAsFixed(2)} TND',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),

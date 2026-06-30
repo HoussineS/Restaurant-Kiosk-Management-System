@@ -17,9 +17,9 @@ class OrdersScreen extends ConsumerWidget {
     return AdminPageLayout(
       title: 'Order Management',
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const PosScreen()),
-        ),
+        onPressed: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const PosScreen())),
         icon: const Icon(Icons.add_shopping_cart),
         label: const Text('New Order'),
         backgroundColor: Colors.black,
@@ -113,7 +113,10 @@ class _OrderCard extends ConsumerWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(8),
@@ -139,7 +142,9 @@ class _OrderCard extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<OrderStatus>(
@@ -170,28 +175,30 @@ class _OrderCard extends ConsumerWidget {
             ),
             const Divider(height: 24),
             // Items List
-            ...order.items.map((item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Text(
-                        '${item.quantity}x',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+            ...order.items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Text(
+                      '${item.quantity}x',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        item.productName,
+                        style: const TextStyle(fontSize: 14),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          item.productName,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                      Text(
-                        '${item.subtotal.toStringAsFixed(3)} TND',
-                        style: TextStyle(color: Colors.grey.shade700),
-                      ),
-                    ],
-                  ),
-                )),
+                    ),
+                    Text(
+                      '${item.subtotal.toStringAsFixed(2)} TND',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
             // Footer: Total & Delete Button
             Row(
@@ -204,7 +211,7 @@ class _OrderCard extends ConsumerWidget {
                   tooltip: 'Delete Order',
                 ),
                 Text(
-                  'Total: ${order.totalPrice.toStringAsFixed(3)} TND',
+                  'Total: ${order.totalPrice.toStringAsFixed(2)} TND',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -223,7 +230,9 @@ class _OrderCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Order?'),
-        content: Text('Are you sure you want to permanently delete ${order.orderNumber}?'),
+        content: Text(
+          'Are you sure you want to permanently delete ${order.orderNumber}?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -231,7 +240,9 @@ class _OrderCard extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () {
-              ref.read(ordersControllerProvider.notifier).deleteOrder(order.id!);
+              ref
+                  .read(ordersControllerProvider.notifier)
+                  .deleteOrder(order.id!);
               Navigator.of(ctx).pop();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
