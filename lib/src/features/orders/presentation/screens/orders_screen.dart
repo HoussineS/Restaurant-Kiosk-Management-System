@@ -186,7 +186,7 @@ class _OrderCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '\$${item.subtotal.toStringAsFixed(2)}',
+                        '${item.subtotal.toStringAsFixed(3)} TND',
                         style: TextStyle(color: Colors.grey.shade700),
                       ),
                     ],
@@ -204,7 +204,7 @@ class _OrderCard extends ConsumerWidget {
                   tooltip: 'Delete Order',
                 ),
                 Text(
-                  'Total: \$${order.totalPrice.toStringAsFixed(2)}',
+                  'Total: ${order.totalPrice.toStringAsFixed(3)} TND',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

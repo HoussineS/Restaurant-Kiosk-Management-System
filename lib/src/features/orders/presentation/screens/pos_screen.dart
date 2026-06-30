@@ -293,7 +293,7 @@ class _ModifiersDialogState extends State<_ModifiersDialog> {
             final isSelected = _selectedModifiers.contains(mod);
             return CheckboxListTile(
               title: Text(mod.name),
-              subtitle: mod.extraPrice > 0 ? Text('+\$${mod.extraPrice.toStringAsFixed(2)}') : null,
+              subtitle: mod.extraPrice > 0 ? Text('+${mod.extraPrice.toStringAsFixed(3)} TND') : null,
               value: isSelected,
               onChanged: (val) {
                 setState(() {
@@ -420,7 +420,7 @@ class _ProductCardState extends State<_ProductCard>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '\$${p.price.toStringAsFixed(2)}',
+                            '${p.price.toStringAsFixed(3)} TND',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -635,7 +635,7 @@ class _CartPane extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Total: \$${order.totalPrice.toStringAsFixed(2)}',
+              'Total: ${order.totalPrice.toStringAsFixed(3)} TND',
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 4),
@@ -722,13 +722,13 @@ class _CartItemTile extends ConsumerWidget {
               if (item.modifiers.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 ...item.modifiers.map((mod) => Text(
-                  '+ ${mod.name} (\$${mod.extraPrice.toStringAsFixed(2)})',
+                  '+ ${mod.name} (+${mod.extraPrice.toStringAsFixed(3)} TND)',
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 )),
               ],
               const SizedBox(height: 4),
               Text(
-                '\$${item.subtotal.toStringAsFixed(2)}',
+                '${item.subtotal.toStringAsFixed(3)} TND',
                 style: TextStyle(
                   color: Colors.grey.shade700,
                   fontWeight: FontWeight.w600,
@@ -812,7 +812,7 @@ class _CartFooter extends StatelessWidget {
             children: [
               Text('Total', style: TextStyle(color: Colors.grey.shade600)),
               Text(
-                '\$${total.toStringAsFixed(2)}',
+                '${total.toStringAsFixed(3)} TND',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,

@@ -50,7 +50,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       text: product?.description ?? '',
     );
     _priceController = TextEditingController(
-      text: product == null ? '' : product.price.toStringAsFixed(2),
+      text: product == null ? '' : product.price.toStringAsFixed(3),
     );
     _categoryId = product?.categoryId ?? widget.categories.first.id!;
     _available = product?.available ?? true;
