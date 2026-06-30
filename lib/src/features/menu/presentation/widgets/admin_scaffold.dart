@@ -100,7 +100,7 @@ class AdminPageLayout extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   image: const DecorationImage(
-                    image: NetworkImage('https://images.unsplash.com/photo-1495474472204-51860569ac09?q=80&w=1000&auto=format&fit=crop'),
+                    image: NetworkImage('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80'),
                     fit: BoxFit.cover,
                   ),
                 ),
