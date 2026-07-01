@@ -17,6 +17,7 @@ class OrdersScreen extends ConsumerWidget {
     return AdminPageLayout(
       title: 'Order Management',
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'orders_fab',
         onPressed: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const PosScreen())),

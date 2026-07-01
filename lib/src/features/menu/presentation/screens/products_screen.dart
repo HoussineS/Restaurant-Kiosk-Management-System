@@ -22,6 +22,7 @@ class ProductsScreen extends ConsumerWidget {
     return AdminPageLayout(
       title: 'Product Management',
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'products_fab',
         onPressed: categoriesState.maybeWhen(
           data: (categories) => categories.isEmpty
               ? null

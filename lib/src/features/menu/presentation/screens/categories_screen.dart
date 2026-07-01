@@ -18,6 +18,7 @@ class CategoriesScreen extends ConsumerWidget {
     return AdminPageLayout(
       title: 'Category Management',
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'categories_fab',
         onPressed: () => _openCategoryDialog(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('Category'),
