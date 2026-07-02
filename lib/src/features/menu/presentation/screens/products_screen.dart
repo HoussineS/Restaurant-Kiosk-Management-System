@@ -130,6 +130,15 @@ class ProductsScreen extends ConsumerWidget {
             price: result.price,
             available: result.available,
             selectedImagePath: result.selectedImagePath,
+            modifiers: result.modifiers
+                .map(
+                  (m) => ProductModifier(
+                    productId: product?.id ?? 0,
+                    name: m.name,
+                    extraPrice: m.extraPrice,
+                  ),
+                )
+                .toList(),
           );
       if (!context.mounted) {
         return;
@@ -249,6 +258,30 @@ class _ProductCard extends StatelessWidget {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
+                  if (product.modifiers.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.tune,
+                          size: 13,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${product.modifiers.length} supplement${product.modifiers.length == 1 ? '' : 's'}',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelSmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   Expanded(
                     child: Text(

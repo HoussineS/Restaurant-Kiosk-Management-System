@@ -115,4 +115,28 @@ class MenuLocalDataSource {
     final database = await _appDatabase.database;
     await database.delete('products', where: 'id = ?', whereArgs: [id]);
   }
+
+  /// Replaces all modifiers for [productId] with [modifiers].
+  Future<void> saveModifiers(
+    int productId,
+    List<ProductModifier> modifiers,
+  ) async {
+    final database = await _appDatabase.database;
+    await database.transaction((txn) async {
+      // Remove existing modifiers for this product.
+      await txn.delete(
+        'product_modifiers',
+        where: 'product_id = ?',
+        whereArgs: [productId],
+      );
+      // Insert new modifiers.
+      for (final modifier in modifiers) {
+        await txn.insert('product_modifiers', {
+          'product_id': productId,
+          'name': modifier.name,
+          'extra_price': modifier.extraPrice,
+        });
+      }
+    });
+  }
 }

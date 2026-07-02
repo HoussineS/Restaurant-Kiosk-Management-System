@@ -97,6 +97,7 @@ class ProductsController extends AsyncNotifier<List<Product>> {
     required double price,
     required bool available,
     String? selectedImagePath,
+    List<ProductModifier> modifiers = const [],
   }) async {
     final cleanedName = name.trim();
     if (cleanedName.isEmpty) {
@@ -121,14 +122,25 @@ class ProductsController extends AsyncNotifier<List<Product>> {
         price: price,
         available: available,
         imagePath: imagePath,
+        modifiers: modifiers,
       );
 
       if (product == null) {
-        await _repository.createProduct(savedProduct);
+        final created = await _repository.createProduct(savedProduct);
+        // Save modifiers with the real product id.
+        final withId = modifiers
+            .map((m) => m.copyWith(productId: created.id!))
+            .toList();
+        await _repository.saveModifiers(created.id!, withId);
         return;
       }
 
       await _repository.updateProduct(savedProduct);
+      // Re-save modifiers (replace all).
+      final withId = modifiers
+          .map((m) => m.copyWith(productId: savedProduct.id!))
+          .toList();
+      await _repository.saveModifiers(savedProduct.id!, withId);
     });
   }
 

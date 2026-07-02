@@ -31,4 +31,12 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<void> deleteProduct(int id) {
     return _localDataSource.deleteProduct(id);
   }
+
+  @override
+  Future<void> saveModifiers(
+    int productId,
+    List<ProductModifier> modifiers,
+  ) {
+    return _localDataSource.saveModifiers(productId, modifiers);
+  }
 }
