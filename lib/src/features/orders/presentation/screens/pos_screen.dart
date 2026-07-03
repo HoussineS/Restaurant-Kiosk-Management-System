@@ -8,6 +8,7 @@ import '../../../menu/domain/entities/product.dart';
 import '../../../menu/presentation/providers/menu_providers.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_providers.dart';
+import '../../../../core/utils/responsive_layout.dart';
 
 // No local StateProvider needed — selectedCategoryProvider lives in order_providers.dart
 
@@ -20,18 +21,40 @@ class PosScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isMobile = context.isMobile;
+    final cartWidth = context.responsive<double>(
+      mobile: 0,
+      tablet: 280,
+      desktop: 340,
+    );
+
+    if (isMobile) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F5F7),
+        body: SafeArea(
+          child: Column(
+            children: [
+              const _PosHeader(),
+              const Expanded(child: _MenuPane()),
+            ],
+          ),
+        ),
+        floatingActionButton: const _CartFab(),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
       body: SafeArea(
         child: Column(
           children: [
             const _PosHeader(),
-            const Expanded(
+            Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 7, child: _MenuPane()),
-                  SizedBox(width: 340, child: _CartPane()),
+                  const Expanded(flex: 7, child: _MenuPane()),
+                  SizedBox(width: cartWidth, child: const _CartPane()),
                 ],
               ),
             ),
@@ -243,11 +266,19 @@ class _ProductGrid extends ConsumerWidget {
 
     return GridView.builder(
       padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: context.responsive<int>(
+          mobile: 2,
+          tablet: 3,
+          desktop: 3,
+        ),
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.78,
+        childAspectRatio: context.responsive<double>(
+          mobile: 0.72,
+          tablet: 0.76,
+          desktop: 0.78,
+        ),
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
@@ -518,6 +549,44 @@ class _PlaceholderImage extends StatelessWidget {
     return Container(
       color: Colors.grey.shade100,
       child: const Icon(Icons.fastfood, size: 48, color: Colors.black26),
+    );
+  }
+}
+
+// ─── Cart FAB (mobile only) ───────────────────────────────────────────────────
+
+class _CartFab extends ConsumerWidget {
+  const _CartFab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(cartProvider);
+    final total = items.fold<int>(0, (sum, i) => sum + i.quantity);
+
+    return FloatingActionButton.extended(
+      backgroundColor: Colors.black,
+      foregroundColor: Colors.white,
+      onPressed: () => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (_) => const FractionallySizedBox(
+          heightFactor: 0.92,
+          child: _CartPane(),
+        ),
+      ),
+      icon: Badge(
+        isLabelVisible: total > 0,
+        label: Text('$total'),
+        child: const Icon(Icons.shopping_bag_outlined),
+      ),
+      label: Text(
+        total == 0 ? 'Cart' : 'Cart ($total)',
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

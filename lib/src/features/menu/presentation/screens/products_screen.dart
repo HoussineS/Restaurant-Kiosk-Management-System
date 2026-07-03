@@ -10,6 +10,7 @@ import '../widgets/admin_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_panel.dart';
 import '../widgets/product_form_dialog.dart';
+import '../../../../core/utils/responsive_layout.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -69,13 +70,23 @@ class ProductsScreen extends ConsumerWidget {
 
               return LayoutBuilder(
                 builder: (context, constraints) {
-                  final isWide = constraints.maxWidth > 920;
+                  final size = context.screenSize;
+                  final crossAxisCount = switch (size) {
+                    ScreenSize.mobile => 1,
+                    ScreenSize.tablet => 2,
+                    ScreenSize.desktop => 3,
+                  };
+                  final aspectRatio = switch (size) {
+                    ScreenSize.mobile => 2.8,
+                    ScreenSize.tablet => 1.5,
+                    ScreenSize.desktop => 1.65,
+                  };
                   return GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: isWide ? 3 : 2,
+                      crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: isWide ? 1.65 : 1.35,
+                      childAspectRatio: aspectRatio,
                     ),
                     itemCount: products.length,
                     itemBuilder: (context, index) {
@@ -233,6 +244,7 @@ class _ProductCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -283,16 +295,14 @@ class _ProductCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Expanded(
-                    child: Text(
-                      product.description.isEmpty
-                          ? 'No description'
-                          : product.description,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                  Text(
+                    product.description.isEmpty
+                        ? 'No description'
+                        : product.description,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 12),

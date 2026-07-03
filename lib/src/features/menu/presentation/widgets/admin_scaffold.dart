@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/responsive_layout.dart';
 import '../screens/categories_screen.dart';
 import '../screens/products_screen.dart';
 import '../../../orders/presentation/screens/orders_screen.dart';
@@ -14,8 +15,45 @@ class AdminScaffold extends StatefulWidget {
 class _AdminScaffoldState extends State<AdminScaffold> {
   int _selectedIndex = 0;
 
+  static const _screens = [
+    OrdersScreen(),
+    CategoriesScreen(),
+    ProductsScreen(),
+  ];
+
+  static const _destinations = [
+    (icon: Icons.receipt_long_outlined, selectedIcon: Icons.receipt_long, label: 'Orders'),
+    (icon: Icons.category_outlined, selectedIcon: Icons.category, label: 'Categories'),
+    (icon: Icons.fastfood_outlined, selectedIcon: Icons.fastfood, label: 'Products'),
+  ];
+
+  void _onDestinationSelected(int index) =>
+      setState(() => _selectedIndex = index);
+
   @override
   Widget build(BuildContext context) {
+    final isMobile = context.isMobile;
+
+    final body = IndexedStack(index: _selectedIndex, children: _screens);
+
+    if (isMobile) {
+      return Scaffold(
+        body: body,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: _onDestinationSelected,
+          destinations: [
+            for (final d in _destinations)
+              NavigationDestination(
+                icon: Icon(d.icon),
+                selectedIcon: Icon(d.selectedIcon),
+                label: d.label,
+              ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       body: Row(
         children: [
@@ -30,41 +68,18 @@ class _AdminScaffoldState extends State<AdminScaffold> {
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long),
-                label: Text('Orders'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.category_outlined),
-                selectedIcon: Icon(Icons.category),
-                label: Text('Categories'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.fastfood_outlined),
-                selectedIcon: Icon(Icons.fastfood),
-                label: Text('Products'),
-              ),
+            destinations: [
+              for (final d in _destinations)
+                NavigationRailDestination(
+                  icon: Icon(d.icon),
+                  selectedIcon: Icon(d.selectedIcon),
+                  label: Text(d.label),
+                ),
             ],
-            onDestinationSelected: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
+            onDestinationSelected: _onDestinationSelected,
           ),
           const VerticalDivider(width: 1),
-          Expanded(
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: const [
-                OrdersScreen(),
-                CategoriesScreen(),
-                ProductsScreen(),
-              ],
-            ),
-          ),
-
+          Expanded(child: body),
         ],
       ),
     );
@@ -85,17 +100,21 @@ class AdminPageLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = context.isMobile;
+    final padding = isMobile ? 16.0 : 24.0;
+    final bannerHeight = isMobile ? 80.0 : 120.0;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: floatingActionButton,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                height: 120,
+                height: bannerHeight,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
@@ -116,7 +135,7 @@ class AdminPageLayout extends StatelessWidget {
                       ],
                     ),
                   ),
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   alignment: Alignment.bottomLeft,
                   child: Text(
                     title,
@@ -128,13 +147,14 @@ class AdminPageLayout extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                'Manage the restaurant menu used by the kiosk.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              if (!isMobile)
+                Text(
+                  'Manage the restaurant menu used by the kiosk.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
+              SizedBox(height: isMobile ? 12 : 24),
               Expanded(child: child),
             ],
           ),
