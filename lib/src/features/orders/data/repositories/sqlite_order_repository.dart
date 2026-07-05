@@ -21,7 +21,8 @@ class SqliteOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<List<Order>> getOrders() => _dataSource.getOrders();
+  Future<List<Order>> getOrders({DateTime? startDate, DateTime? endDate}) => 
+    _dataSource.getOrders(startDate: startDate, endDate: endDate);
 
   @override
   Future<Order?> getOrderByNumber(String orderNumber) async {

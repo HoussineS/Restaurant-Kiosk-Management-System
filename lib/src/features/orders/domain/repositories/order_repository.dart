@@ -7,7 +7,7 @@ abstract interface class OrderRepository {
     required List<OrderItem> items,
   });
 
-  Future<List<Order>> getOrders();
+  Future<List<Order>> getOrders({DateTime? startDate, DateTime? endDate});
 
   Future<Order?> getOrderByNumber(String orderNumber);
 

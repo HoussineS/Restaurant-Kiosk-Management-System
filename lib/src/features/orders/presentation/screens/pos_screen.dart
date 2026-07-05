@@ -9,6 +9,7 @@ import '../../../menu/presentation/providers/menu_providers.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_providers.dart';
 import '../../../../core/utils/responsive_layout.dart';
+import '../../utils/printer_service.dart';
 
 // No local StateProvider needed — selectedCategoryProvider lives in order_providers.dart
 
@@ -679,6 +680,10 @@ class _CartPane extends ConsumerWidget {
 
     if (order != null) {
       ref.read(cartProvider.notifier).clearCart();
+      
+      // Automatically print the receipt for the POS system
+      PrinterService.printReceipt(order);
+      
       if (context.mounted) {
         _showSuccessDialog(context, order);
       }

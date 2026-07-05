@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/order.dart';
 import '../providers/order_providers.dart';
+import '../providers/order_filter_provider.dart';
+import '../../utils/printer_service.dart';
+import 'package:intl/intl.dart';
 import 'pos_screen.dart';
 import '../../../menu/presentation/widgets/admin_scaffold.dart';
 import '../../../menu/presentation/widgets/error_panel.dart';
@@ -13,6 +16,7 @@ class OrdersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ordersState = ref.watch(ordersControllerProvider);
+    final dateRange = ref.watch(orderFilterProvider);
 
     return AdminPageLayout(
       title: 'Order Management',
@@ -33,38 +37,78 @@ class OrdersScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(ordersControllerProvider),
         ),
         data: (orders) {
-          if (orders.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Icon(Icons.receipt_long, size: 64, color: Colors.black26),
-                  SizedBox(height: 16),
-                  Text(
-                    'No orders yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black54,
+                  TextButton.icon(
+                    onPressed: () async {
+                      final range = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                        initialDateRange: dateRange,
+                      );
+                      if (range != null) {
+                        ref.read(orderFilterProvider.notifier).setDateRange(range);
+                      }
+                    },
+                    icon: const Icon(Icons.date_range),
+                    label: Text(dateRange == null 
+                      ? 'Filter by Date' 
+                      : '${DateFormat('MMM d').format(dateRange.start)} - ${DateFormat('MMM d').format(dateRange.end)}'),
+                  ),
+                  if (dateRange != null)
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () => ref.read(orderFilterProvider.notifier).setDateRange(null),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Create a new order to get started.',
-                    style: TextStyle(color: Colors.black38),
-                  ),
+                  const Spacer(),
+                  if (orders.isNotEmpty)
+                    ElevatedButton.icon(
+                      onPressed: () => PrinterService.printSummary(orders, dateRange?.start, dateRange?.end),
+                      icon: const Icon(Icons.print),
+                      label: const Text('Print Summary'),
+                    ),
                 ],
               ),
-            );
-          }
+              const SizedBox(height: 16),
+              Expanded(
+                child: orders.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.receipt_long, size: 64, color: Colors.black26),
+                            SizedBox(height: 16),
+                            Text(
+                              'No orders yet',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Create a new order to get started.',
+                              style: TextStyle(color: Colors.black38),
+                            ),
+                          ],
+                        ),
+                      )
 
-          return ListView.builder(
-            itemCount: orders.length,
-            padding: const EdgeInsets.only(bottom: 80),
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return _OrderCard(order: order);
-            },
+                    : ListView.builder(
+                        itemCount: orders.length,
+                        padding: const EdgeInsets.only(bottom: 80),
+                        itemBuilder: (context, index) {
+                          final order = orders[index];
+                          return _OrderCard(order: order);
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),
@@ -213,11 +257,20 @@ class _OrderCard extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  onPressed: () => _confirmDelete(context, ref, order),
-                  icon: const Icon(Icons.delete_outline),
-                  color: Colors.red.shade400,
-                  tooltip: 'Delete Order',
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => _confirmDelete(context, ref, order),
+                      icon: const Icon(Icons.delete_outline),
+                      color: Colors.red.shade400,
+                      tooltip: 'Delete Order',
+                    ),
+                    IconButton(
+                      onPressed: () => PrinterService.printReceipt(order),
+                      icon: const Icon(Icons.print_outlined),
+                      tooltip: 'Print Receipt',
+                    ),
+                  ],
                 ),
                 Text(
                   'Total: ${order.totalPrice.toStringAsFixed(2)} TND',

@@ -66,10 +66,30 @@ class OrderLocalDataSource {
     });
   }
 
-  Future<List<Order>> getOrders() async {
+  Future<List<Order>> getOrders({DateTime? startDate, DateTime? endDate}) async {
     final database = await _appDatabase.database;
+    
+    String? whereClause;
+    List<Object?>? whereArgs;
+
+    if (startDate != null && endDate != null) {
+      whereClause = 'created_at >= ? AND created_at <= ?';
+      whereArgs = [
+        startDate.toIso8601String(),
+        endDate.toIso8601String(),
+      ];
+    } else if (startDate != null) {
+      whereClause = 'created_at >= ?';
+      whereArgs = [startDate.toIso8601String()];
+    } else if (endDate != null) {
+      whereClause = 'created_at <= ?';
+      whereArgs = [endDate.toIso8601String()];
+    }
+
     final orderRows = await database.query(
       'orders',
+      where: whereClause,
+      whereArgs: whereArgs,
       orderBy: 'created_at DESC',
     );
 

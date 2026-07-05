@@ -6,6 +6,7 @@ import '../../data/repositories/sqlite_order_repository.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../../menu/domain/entities/product.dart';
+import 'order_filter_provider.dart';
 
 // ─── Infrastructure providers ────────────────────────────────────────────────
 
@@ -123,10 +124,23 @@ final cartItemCountProvider = Provider<int>((ref) {
 class OrdersController extends AsyncNotifier<List<Order>> {
   late final OrderRepository _repository;
 
+  Future<List<Order>> _fetchOrders() {
+    final dateRange = ref.read(orderFilterProvider);
+    DateTime? endDate = dateRange?.end;
+    if (endDate != null) {
+      endDate = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    }
+    return _repository.getOrders(
+      startDate: dateRange?.start,
+      endDate: endDate,
+    );
+  }
+
   @override
   Future<List<Order>> build() {
     _repository = ref.watch(orderRepositoryProvider);
-    return _repository.getOrders();
+    ref.watch(orderFilterProvider); // re-fetch when filter changes
+    return _fetchOrders();
   }
 
   /// Generates the next order number (padded sequential integer).
@@ -153,7 +167,7 @@ class OrdersController extends AsyncNotifier<List<Order>> {
         totalPrice: total,
         items: items,
       );
-      return _repository.getOrders();
+      return _fetchOrders();
     });
 
     // Return the newly placed order from state
@@ -172,7 +186,7 @@ class OrdersController extends AsyncNotifier<List<Order>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await _repository.updateOrderStatus(orderId, status);
-      return _repository.getOrders();
+      return _fetchOrders();
     });
   }
 
@@ -180,7 +194,7 @@ class OrdersController extends AsyncNotifier<List<Order>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await _repository.deleteOrder(orderId);
-      return _repository.getOrders();
+      return _fetchOrders();
     });
   }
 }
