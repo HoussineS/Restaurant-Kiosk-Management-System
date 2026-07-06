@@ -15,8 +15,9 @@ Future<void> main() async {
   WindowOptions windowOptions = const WindowOptions(
     fullScreen: true,
     center: true,
+    skipTaskbar: false,
   );
-  
+
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
