@@ -10,7 +10,7 @@ import '../widgets/admin_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_panel.dart';
 import '../widgets/product_form_dialog.dart';
-import '../../../../core/utils/responsive_layout.dart';
+
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -70,17 +70,34 @@ class ProductsScreen extends ConsumerWidget {
 
               return LayoutBuilder(
                 builder: (context, constraints) {
-                  final size = context.screenSize;
-                  final crossAxisCount = switch (size) {
-                    ScreenSize.mobile => 1,
-                    ScreenSize.tablet => 2,
-                    ScreenSize.desktop => 3,
-                  };
-                  final aspectRatio = switch (size) {
-                    ScreenSize.mobile => 2.8,
-                    ScreenSize.tablet => 1.5,
-                    ScreenSize.desktop => 1.65,
-                  };
+                  final w = constraints.maxWidth;
+
+                  // ── Column count based on available local width ─────────
+                  final int crossAxisCount;
+                  final double aspectRatio;
+
+                  if (w < 500) {
+                    // Single column — wide horizontal card
+                    crossAxisCount = 1;
+                    aspectRatio = 3.2;
+                  } else if (w < 760) {
+                    // 2 columns — narrow vertical cards (< 300px each)
+                    crossAxisCount = 2;
+                    aspectRatio = 0.95;
+                  } else if (w < 1050) {
+                    // 3 columns — narrow vertical cards
+                    crossAxisCount = 3;
+                    aspectRatio = 1.0;
+                  } else if (w < 1400) {
+                    // 3 columns — slightly wider, can use horizontal layout
+                    crossAxisCount = 3;
+                    aspectRatio = 1.55;
+                  } else {
+                    // 4 columns — wide horizontal cards
+                    crossAxisCount = 4;
+                    aspectRatio = 1.6;
+                  }
+
                   return GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
@@ -107,6 +124,7 @@ class ProductsScreen extends ConsumerWidget {
                   );
                 },
               );
+
             },
           );
         },
@@ -229,12 +247,61 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth;
+        // Switch to vertical layout for narrow cards (multi-column grids)
+        final isNarrow = cardWidth < 300;
+        return isNarrow
+            ? _VerticalCard(
+                product: product,
+                categoryName: categoryName,
+                onEdit: onEdit,
+                onDelete: onDelete,
+                cardWidth: cardWidth,
+              )
+            : _HorizontalCard(
+                product: product,
+                categoryName: categoryName,
+                onEdit: onEdit,
+                onDelete: onDelete,
+                cardWidth: cardWidth,
+              );
+      },
+    );
+  }
+}
+
+// ─── Horizontal card (image left, content right) — used for wide cards ────────
+
+class _HorizontalCard extends StatelessWidget {
+  const _HorizontalCard({
+    required this.product,
+    required this.categoryName,
+    required this.onEdit,
+    required this.onDelete,
+    required this.cardWidth,
+  });
+
+  final Product product;
+  final String categoryName;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final double cardWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    // Image occupies ~35% of card width, capped at 140px
+    final imageWidth = (cardWidth * 0.35).clamp(80.0, 140.0);
+    final isCompact = cardWidth < 420;
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AspectRatio(
-            aspectRatio: 1,
+          SizedBox(
+            width: imageWidth,
             child: _ProductImage(
               imagePath: product.imagePath,
               productName: product.name,
@@ -242,88 +309,109 @@ class _ProductCard extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(isCompact ? 10 : 14),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // ── Top: name + chip ───────────────────────────────────
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           product.name,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       _AvailabilityChip(available: product.available),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    categoryName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  if (product.modifiers.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.tune,
-                          size: 13,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant,
+
+                  // ── Middle: category + description ─────────────────────
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        categoryName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 4),
+                      ),
+                      if (product.modifiers.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.tune,
+                              size: 11,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${product.modifiers.length} supplement${product.modifiers.length == 1 ? '' : 's'}',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (!isCompact && product.description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
                         Text(
-                          '${product.modifiers.length} supplement${product.modifiers.length == 1 ? '' : 's'}',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.labelSmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          product.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
-                    ),
-                  ],
-                  const SizedBox(height: 8),
-                  Text(
-                    product.description.isEmpty
-                        ? 'No description'
-                        : product.description,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
+
+                  // ── Bottom: price + action buttons ─────────────────────
                   Row(
                     children: [
                       Expanded(
                         child: Text(
                           '${product.price.toStringAsFixed(2)} TND',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      IconButton.filledTonal(
-                        tooltip: 'Edit product',
-                        onPressed: onEdit,
-                        icon: const Icon(Icons.edit),
+                      SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: IconButton.filledTonal(
+                          padding: EdgeInsets.zero,
+                          tooltip: 'Edit',
+                          onPressed: onEdit,
+                          icon: const Icon(Icons.edit, size: 15),
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton.filledTonal(
-                        tooltip: 'Delete product',
-                        onPressed: onDelete,
-                        icon: const Icon(Icons.delete_outline),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: IconButton.filledTonal(
+                          padding: EdgeInsets.zero,
+                          tooltip: 'Delete',
+                          onPressed: onDelete,
+                          icon: const Icon(Icons.delete_outline, size: 15),
+                        ),
                       ),
                     ],
                   ),
@@ -336,6 +424,128 @@ class _ProductCard extends StatelessWidget {
     );
   }
 }
+
+// ─── Vertical card (image top, content bottom) — used for narrow cards ────────
+
+class _VerticalCard extends StatelessWidget {
+  const _VerticalCard({
+    required this.product,
+    required this.categoryName,
+    required this.onEdit,
+    required this.onDelete,
+    required this.cardWidth,
+  });
+
+  final Product product;
+  final String categoryName;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final double cardWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Image (fixed height fraction of card) ──────────────────────
+          Expanded(
+            flex: 5,
+            child: _ProductImage(
+              imagePath: product.imagePath,
+              productName: product.name,
+            ),
+          ),
+
+          // ── Content ────────────────────────────────────────────────────
+          Expanded(
+            flex: 7,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Name + chip
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              categoryName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          _AvailabilityChip(available: product.available),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  // Price + buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${product.price.toStringAsFixed(2)} TND',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: IconButton.filledTonal(
+                          padding: EdgeInsets.zero,
+                          tooltip: 'Edit',
+                          onPressed: onEdit,
+                          icon: const Icon(Icons.edit, size: 13),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: IconButton.filledTonal(
+                          padding: EdgeInsets.zero,
+                          tooltip: 'Delete',
+                          onPressed: onDelete,
+                          icon: const Icon(Icons.delete_outline, size: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Product Image ─────────────────────────────────────────────────────────────
 
 class _ProductImage extends StatelessWidget {
   const _ProductImage({this.imagePath, required this.productName});
@@ -350,38 +560,42 @@ class _ProductImage extends StatelessWidget {
     Widget placeholder() {
       return ColoredBox(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.fastfood,
-          size: 40,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        child: Center(
+          child: Icon(
+            Icons.fastfood,
+            size: 36,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       );
     }
 
-    if (path == null || path.isEmpty) {
-      return placeholder();
-    }
+    if (path == null || path.isEmpty) return placeholder();
 
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return Image.network(
         path,
         fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
         errorBuilder: (_, __, ___) => placeholder(),
       );
     }
 
     final file = File(path);
-    if (!file.existsSync()) {
-      return placeholder();
-    }
+    if (!file.existsSync()) return placeholder();
 
     return Image.file(
       file,
       fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
       errorBuilder: (_, __, ___) => placeholder(),
     );
   }
 }
+
+// ─── Availability chip ─────────────────────────────────────────────────────────
 
 class _AvailabilityChip extends StatelessWidget {
   const _AvailabilityChip({required this.available});
@@ -393,10 +607,15 @@ class _AvailabilityChip extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Chip(
       visualDensity: VisualDensity.compact,
-      label: Text(available ? 'Active' : 'Hidden'),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+      label: Text(
+        available ? 'Active' : 'Hidden',
+        style: const TextStyle(fontSize: 10),
+      ),
       avatar: Icon(
         available ? Icons.check_circle : Icons.pause_circle_outline,
-        size: 16,
+        size: 12,
       ),
       backgroundColor: available
           ? colorScheme.primaryContainer
@@ -405,3 +624,4 @@ class _AvailabilityChip extends StatelessWidget {
     );
   }
 }
+

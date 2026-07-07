@@ -22,46 +22,52 @@ class PosScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMobile = context.isMobile;
-    final cartWidth = context.responsive<double>(
-      mobile: 0,
-      tablet: 280,
-      desktop: 340,
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isMobile = width < AppBreakpoints.mobile;
 
-    if (isMobile) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF5F5F7),
-        body: SafeArea(
-          child: Column(
-            children: [
-              const _PosHeader(),
-              const Expanded(child: _MenuPane()),
-            ],
-          ),
-        ),
-        floatingActionButton: const _CartFab(),
-      );
-    }
+        // Cart pane width: 30% of screen width, clamped between 260–380 px.
+        // On mobile it collapses to 0 (shown as a FAB → bottom sheet).
+        final cartWidth = isMobile
+            ? 0.0
+            : (width * 0.30).clamp(260.0, 380.0);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const _PosHeader(),
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        if (isMobile) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF5F5F7),
+            body: SafeArea(
+              child: Column(
                 children: [
-                  const Expanded(flex: 7, child: _MenuPane()),
-                  SizedBox(width: cartWidth, child: const _CartPane()),
+                  const _PosHeader(),
+                  const Expanded(child: _MenuPane()),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+            floatingActionButton: const _CartFab(),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF5F5F7),
+          body: SafeArea(
+            child: Column(
+              children: [
+                const _PosHeader(),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Expanded(flex: 7, child: _MenuPane()),
+                      SizedBox(width: cartWidth, child: const _CartPane()),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -268,18 +274,21 @@ class _ProductGrid extends ConsumerWidget {
     return GridView.builder(
       padding: const EdgeInsets.all(20),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: context.responsive<int>(
-          mobile: 2,
-          tablet: 3,
-          desktop: 3,
-        ),
+        crossAxisCount: () {
+          final w = MediaQuery.sizeOf(context).width;
+          if (w < AppBreakpoints.mobile) return 2;
+          if (w < AppBreakpoints.tablet) return 3;
+          if (w < AppBreakpoints.wideDesktop) return 3;
+          return 4;
+        }(),
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: context.responsive<double>(
-          mobile: 0.72,
-          tablet: 0.76,
-          desktop: 0.78,
-        ),
+        childAspectRatio: () {
+          final w = MediaQuery.sizeOf(context).width;
+          if (w < AppBreakpoints.mobile) return 0.72;
+          if (w < AppBreakpoints.tablet) return 0.78;
+          return 0.82;
+        }(),
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
