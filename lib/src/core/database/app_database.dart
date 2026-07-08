@@ -18,8 +18,7 @@ class AppDatabase {
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, _databaseName);
+    final path = await databasePath;
 
     return await openDatabase(
       path,
@@ -27,6 +26,16 @@ class AppDatabase {
       onCreate: _createDatabase,
       onUpgrade: _upgradeDatabase,
     );
+  }
+
+  Future<String> get databasePath async {
+    final dbPath = await getDatabasesPath();
+    return join(dbPath, _databaseName);
+  }
+
+  Future<void> checkpoint() async {
+    final db = await database;
+    await db.rawQuery('PRAGMA wal_checkpoint(FULL)');
   }
 
   Future<void> _createDatabase(Database db, int version) async {
@@ -99,7 +108,10 @@ class AppDatabase {
   }
 
   Future<void> _upgradeDatabase(
-      Database db, int oldVersion, int newVersion) async {
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     if (oldVersion < 2) {
       await db.execute('''
         CREATE TABLE orders (
@@ -189,81 +201,130 @@ class AppDatabase {
     await db.insert('products', {
       'category_id': catStarters,
       'name': 'Brik à l\'Oeuf',
-      'description': 'Crispy thin pastry filled with egg, tuna, parsley, and capers.',
+      'description':
+          'Crispy thin pastry filled with egg, tuna, parsley, and capers.',
       'price': 4.50,
-      'image_path': 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&q=80',
     });
     await db.insert('products', {
       'category_id': catStarters,
       'name': 'Slata Mechouia',
-      'description': 'Grilled pepper and tomato salad with garlic, caraway, olive oil, and tuna.',
+      'description':
+          'Grilled pepper and tomato salad with garlic, caraway, olive oil, and tuna.',
       'price': 6.00,
-      'image_path': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
     });
     await db.insert('products', {
       'category_id': catStarters,
       'name': 'Chorba Frik',
       'description': 'Traditional cracked wheat soup with lamb and tomatoes.',
       'price': 5.50,
-      'image_path': 'https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80',
     });
 
     // Main Dishes
     final couscousId = await db.insert('products', {
       'category_id': catMain,
       'name': 'Couscous à l\'Agneau',
-      'description': 'Authentic Tunisian couscous with lamb, potatoes, carrots, and spicy harissa broth.',
+      'description':
+          'Authentic Tunisian couscous with lamb, potatoes, carrots, and spicy harissa broth.',
       'price': 14.00,
-      'image_path': 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80',
     });
-    await db.insert('product_modifiers', {'product_id': couscousId, 'name': 'Morceau Viande Supplémentaire', 'extra_price': 4.00});
+    await db.insert('product_modifiers', {
+      'product_id': couscousId,
+      'name': 'Morceau Viande Supplémentaire',
+      'extra_price': 4.00,
+    });
 
     await db.insert('products', {
       'category_id': catMain,
       'name': 'Ojja Merguez',
-      'description': 'Spicy tomato and pepper stew with eggs and grilled merguez sausage.',
+      'description':
+          'Spicy tomato and pepper stew with eggs and grilled merguez sausage.',
       'price': 11.00,
-      'image_path': 'https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?w=800&q=80',
     });
 
     final kaftejiId = await db.insert('products', {
       'category_id': catMain,
       'name': 'Kafteji',
-      'description': 'Fried vegetables (peppers, tomatoes, pumpkin, potatoes) chopped together with eggs.',
+      'description':
+          'Fried vegetables (peppers, tomatoes, pumpkin, potatoes) chopped together with eggs.',
       'price': 9.50,
-      'image_path': 'https://images.unsplash.com/photo-1548943487-a2e4b43b4852?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1548943487-a2e4b43b4852?w=800&q=80',
     });
-    await db.insert('product_modifiers', {'product_id': kaftejiId, 'name': 'Oeuf Supplémentaire', 'extra_price': 1.00});
-    await db.insert('product_modifiers', {'product_id': kaftejiId, 'name': 'Merguez Supplémentaire', 'extra_price': 2.00});
+    await db.insert('product_modifiers', {
+      'product_id': kaftejiId,
+      'name': 'Oeuf Supplémentaire',
+      'extra_price': 1.00,
+    });
+    await db.insert('product_modifiers', {
+      'product_id': kaftejiId,
+      'name': 'Merguez Supplémentaire',
+      'extra_price': 2.00,
+    });
 
     // Street Food
     final mlawiId = await db.insert('products', {
       'category_id': catStreet,
       'name': 'Mlawi',
-      'description': 'Flaky folded flatbread wrap with spicy escalope, harissa, and fries.',
+      'description':
+          'Flaky folded flatbread wrap with spicy escalope, harissa, and fries.',
       'price': 4.50,
-      'image_path': 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
     });
-    await db.insert('product_modifiers', {'product_id': mlawiId, 'name': 'Double Fromage', 'extra_price': 1.00});
-    await db.insert('product_modifiers', {'product_id': mlawiId, 'name': 'Escalope Supplémentaire', 'extra_price': 2.50});
-    await db.insert('product_modifiers', {'product_id': mlawiId, 'name': 'Sans Harissa', 'extra_price': 0.00});
+    await db.insert('product_modifiers', {
+      'product_id': mlawiId,
+      'name': 'Double Fromage',
+      'extra_price': 1.00,
+    });
+    await db.insert('product_modifiers', {
+      'product_id': mlawiId,
+      'name': 'Escalope Supplémentaire',
+      'extra_price': 2.50,
+    });
+    await db.insert('product_modifiers', {
+      'product_id': mlawiId,
+      'name': 'Sans Harissa',
+      'extra_price': 0.00,
+    });
 
     final chapatiId = await db.insert('products', {
       'category_id': catStreet,
       'name': 'Chapati Tunisien',
-      'description': 'Traditional flatbread sandwich with omelet, tuna, and cheese.',
+      'description':
+          'Traditional flatbread sandwich with omelet, tuna, and cheese.',
       'price': 5.00,
-      'image_path': 'https://images.unsplash.com/photo-1619860860505-642d2a7f5a81?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1619860860505-642d2a7f5a81?w=800&q=80',
     });
-    await db.insert('product_modifiers', {'product_id': chapatiId, 'name': 'Double Fromage', 'extra_price': 1.00});
-    await db.insert('product_modifiers', {'product_id': chapatiId, 'name': 'Sans Harissa', 'extra_price': 0.00});
+    await db.insert('product_modifiers', {
+      'product_id': chapatiId,
+      'name': 'Double Fromage',
+      'extra_price': 1.00,
+    });
+    await db.insert('product_modifiers', {
+      'product_id': chapatiId,
+      'name': 'Sans Harissa',
+      'extra_price': 0.00,
+    });
 
     await db.insert('products', {
       'category_id': catStreet,
       'name': 'Fricassé',
-      'description': 'Fried savory donut filled with tuna, harissa, boiled egg, olives, and potatoes.',
+      'description':
+          'Fried savory donut filled with tuna, harissa, boiled egg, olives, and potatoes.',
       'price': 3.50,
-      'image_path': 'https://images.unsplash.com/photo-1626079975762-b9b2ffbf41af?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1626079975762-b9b2ffbf41af?w=800&q=80',
     });
 
     // Desserts
@@ -272,14 +333,17 @@ class AppDatabase {
       'name': 'Bambalouni',
       'description': 'Tunisian sweet fried dough ring rolled in sugar.',
       'price': 2.00,
-      'image_path': 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80',
     });
     await db.insert('products', {
       'category_id': catDesserts,
       'name': 'Assida Zgougou',
-      'description': 'Traditional Aleppo pine nut pudding topped with vanilla cream and nuts.',
+      'description':
+          'Traditional Aleppo pine nut pudding topped with vanilla cream and nuts.',
       'price': 7.00,
-      'image_path': 'https://images.unsplash.com/photo-1517260739337-6799d239ce83?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1517260739337-6799d239ce83?w=800&q=80',
     });
 
     // Drinks
@@ -288,21 +352,24 @@ class AppDatabase {
       'name': 'Citronnade aux Amandes',
       'description': 'Freshly blended Tunisian lemon and almond drink.',
       'price': 4.00,
-      'image_path': 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=800&q=80',
     });
     await db.insert('products', {
       'category_id': catDrinks,
       'name': 'Thé aux Pignons',
       'description': 'Mint tea served with pine nuts.',
       'price': 3.50,
-      'image_path': 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80',
     });
     await db.insert('products', {
       'category_id': catDrinks,
       'name': 'Boga Cidre',
       'description': 'Traditional Tunisian dark soda.',
       'price': 2.50,
-      'image_path': 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=800&q=80',
+      'image_path':
+          'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=800&q=80',
     });
   }
 }

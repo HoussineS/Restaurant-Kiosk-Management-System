@@ -20,6 +20,8 @@ class OrdersScreen extends ConsumerWidget {
 
     return AdminPageLayout(
       title: 'Order Management',
+      subtitle:
+          'Search history, update statuses, reprint tickets, and run summaries.',
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'orders_fab',
         onPressed: () => Navigator.of(
@@ -40,39 +42,7 @@ class OrdersScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: () async {
-                      final range = await showDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                        initialDateRange: dateRange,
-                      );
-                      if (range != null) {
-                        ref.read(orderFilterProvider.notifier).setDateRange(range);
-                      }
-                    },
-                    icon: const Icon(Icons.date_range),
-                    label: Text(dateRange == null 
-                      ? 'Filter by Date' 
-                      : '${DateFormat('MMM d').format(dateRange.start)} - ${DateFormat('MMM d').format(dateRange.end)}'),
-                  ),
-                  if (dateRange != null)
-                    IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => ref.read(orderFilterProvider.notifier).setDateRange(null),
-                    ),
-                  const Spacer(),
-                  if (orders.isNotEmpty)
-                    ElevatedButton.icon(
-                      onPressed: () => PrinterService.printSummary(orders, dateRange?.start, dateRange?.end),
-                      icon: const Icon(Icons.print),
-                      label: const Text('Print Summary'),
-                    ),
-                ],
-              ),
+              _OrdersToolbar(orders: orders, dateRange: dateRange),
               const SizedBox(height: 16),
               Expanded(
                 child: orders.isEmpty
@@ -80,7 +50,11 @@ class OrdersScreen extends ConsumerWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.receipt_long, size: 64, color: Colors.black26),
+                            Icon(
+                              Icons.receipt_long,
+                              size: 64,
+                              color: Colors.black26,
+                            ),
                             SizedBox(height: 16),
                             Text(
                               'No orders yet',
@@ -98,7 +72,6 @@ class OrdersScreen extends ConsumerWidget {
                           ],
                         ),
                       )
-
                     : ListView.builder(
                         itemCount: orders.length,
                         padding: const EdgeInsets.only(bottom: 80),
@@ -112,6 +85,93 @@ class OrdersScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _OrdersToolbar extends ConsumerWidget {
+  const _OrdersToolbar({required this.orders, required this.dateRange});
+
+  final List<Order> orders;
+  final DateTimeRange? dateRange;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedStatus = ref.watch(orderStatusFilterProvider);
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        SizedBox(
+          width: 260,
+          child: TextField(
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.search),
+              hintText: 'Search order or product',
+            ),
+            onChanged: (value) =>
+                ref.read(orderSearchProvider.notifier).setQuery(value),
+          ),
+        ),
+        TextButton.icon(
+          onPressed: () async {
+            final range = await showDateRangePicker(
+              context: context,
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2035),
+              initialDateRange: dateRange,
+            );
+            if (range != null) {
+              ref.read(orderFilterProvider.notifier).setDateRange(range);
+            }
+          },
+          icon: const Icon(Icons.date_range),
+          label: Text(
+            dateRange == null
+                ? 'Filter by Date'
+                : '${DateFormat('MMM d').format(dateRange!.start)} - '
+                      '${DateFormat('MMM d').format(dateRange!.end)}',
+          ),
+        ),
+        DropdownButton<OrderStatus?>(
+          value: selectedStatus,
+          hint: const Text('All statuses'),
+          items: [
+            const DropdownMenuItem<OrderStatus?>(
+              value: null,
+              child: Text('All statuses'),
+            ),
+            for (final status in OrderStatus.values)
+              DropdownMenuItem<OrderStatus?>(
+                value: status,
+                child: Text(status.label),
+              ),
+          ],
+          onChanged: (status) =>
+              ref.read(orderStatusFilterProvider.notifier).setStatus(status),
+        ),
+        if (dateRange != null || selectedStatus != null)
+          OutlinedButton.icon(
+            onPressed: () {
+              ref.read(orderFilterProvider.notifier).setDateRange(null);
+              ref.read(orderStatusFilterProvider.notifier).setStatus(null);
+            },
+            icon: const Icon(Icons.clear),
+            label: const Text('Clear Filters'),
+          ),
+        if (orders.isNotEmpty)
+          ElevatedButton.icon(
+            onPressed: () => PrinterService.printSummary(
+              orders,
+              dateRange?.start,
+              dateRange?.end,
+            ),
+            icon: const Icon(Icons.print),
+            label: const Text('Print Summary'),
+          ),
+      ],
     );
   }
 }
@@ -185,7 +245,10 @@ class _OrderCard extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Text(
                       '${order.createdAt.year}-${order.createdAt.month.toString().padLeft(2, '0')}-${order.createdAt.day.toString().padLeft(2, '0')} ${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),

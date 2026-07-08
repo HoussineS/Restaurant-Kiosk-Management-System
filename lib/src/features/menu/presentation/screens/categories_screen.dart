@@ -17,6 +17,7 @@ class CategoriesScreen extends ConsumerWidget {
 
     return AdminPageLayout(
       title: 'Category Management',
+      subtitle: 'Organize the menu sections shown in the kiosk.',
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'categories_fab',
         onPressed: () => _openCategoryDialog(context, ref),
@@ -57,7 +58,9 @@ class CategoriesScreen extends ConsumerWidget {
                       height: 50,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => CircleAvatar(
-                        child: Text(category.name.characters.first.toUpperCase()),
+                        child: Text(
+                          category.name.characters.first.toUpperCase(),
+                        ),
                       ),
                     ),
                   ),

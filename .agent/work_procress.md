@@ -73,3 +73,23 @@ Next Sprint 1 improvements
 - Add product filtering by category.
 - Add optional sample data for first launch.
 - Add repository-focused tests with an in-memory SQLite database.
+
+Sprint 2-4 implementation pass
+
+- Added a Dashboard section with KPIs for today's sales, order count, average ticket, menu size, status totals, best-selling products, and last-7-days revenue.
+- Added a Kitchen Queue section with Pending, Preparing, and Ready columns plus quick actions to start, mark ready, complete, or cancel orders.
+- Expanded Order Management with search by order number/product, status filtering, date filtering, summary printing, receipt reprinting, status updates, and deletion.
+- Added a Settings section with database backup, data refresh, all-time sales summary printing, and fullscreen kiosk toggle.
+- Added a database maintenance service that checkpoints SQLite and copies database backup files to a selected folder.
+- Added an unfiltered all-orders provider for dashboard/kitchen/reporting so analytics are not affected by history filters.
+- Fixed order number generation so new numbers are based on all saved orders, not only the currently filtered order list.
+- Hardened SQLite numeric reads for order totals and unit prices.
+- Updated main navigation to include Dashboard, Kitchen, Orders, Categories, Products, and Settings.
+- Kept existing POS/cart/product/category flows and extended them instead of replacing the app structure.
+
+Verification after this pass
+
+- `dart analyze lib test` reported: No issues found.
+- `dart format` completed formatting the touched Dart files.
+- `flutter test` and `flutter test test/menu_model_test.dart --reporter expanded` both timed out after 120 seconds on this machine.
+- Dart/Flutter commands still report a global telemetry write warning for `C:\Users\Lenovo\AppData\Roaming\.dart-tool\dart-flutter-telemetry-session.json`; this is outside the project and not a source-code analyzer issue.

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/responsive_layout.dart';
+import '../../../orders/presentation/screens/dashboard_screen.dart';
+import '../../../orders/presentation/screens/kitchen_screen.dart';
 import '../screens/categories_screen.dart';
 import '../screens/products_screen.dart';
 import '../../../orders/presentation/screens/orders_screen.dart';
+import '../../../settings/presentation/screens/settings_screen.dart';
 
 class AdminScaffold extends StatefulWidget {
   const AdminScaffold({super.key});
@@ -16,15 +19,45 @@ class _AdminScaffoldState extends State<AdminScaffold> {
   int _selectedIndex = 0;
 
   static const _screens = [
+    DashboardScreen(),
+    KitchenScreen(),
     OrdersScreen(),
     CategoriesScreen(),
     ProductsScreen(),
+    SettingsScreen(),
   ];
 
   static const _destinations = [
-    (icon: Icons.receipt_long_outlined, selectedIcon: Icons.receipt_long, label: 'Orders'),
-    (icon: Icons.category_outlined,     selectedIcon: Icons.category,      label: 'Categories'),
-    (icon: Icons.fastfood_outlined,     selectedIcon: Icons.fastfood,      label: 'Products'),
+    (
+      icon: Icons.dashboard_outlined,
+      selectedIcon: Icons.dashboard,
+      label: 'Dashboard',
+    ),
+    (
+      icon: Icons.soup_kitchen_outlined,
+      selectedIcon: Icons.soup_kitchen,
+      label: 'Kitchen',
+    ),
+    (
+      icon: Icons.receipt_long_outlined,
+      selectedIcon: Icons.receipt_long,
+      label: 'Orders',
+    ),
+    (
+      icon: Icons.category_outlined,
+      selectedIcon: Icons.category,
+      label: 'Categories',
+    ),
+    (
+      icon: Icons.fastfood_outlined,
+      selectedIcon: Icons.fastfood,
+      label: 'Products',
+    ),
+    (
+      icon: Icons.settings_outlined,
+      selectedIcon: Icons.settings,
+      label: 'Settings',
+    ),
   ];
 
   void _onDestinationSelected(int index) =>
@@ -149,11 +182,13 @@ class AdminPageLayout extends StatelessWidget {
     super.key,
     required this.title,
     required this.child,
+    this.subtitle,
     this.floatingActionButton,
   });
 
   final String title;
   final Widget child;
+  final String? subtitle;
   final Widget? floatingActionButton;
 
   @override
@@ -164,8 +199,16 @@ class AdminPageLayout extends StatelessWidget {
         final isMobile = width < AppBreakpoints.mobile;
         final isTablet = width < AppBreakpoints.tablet;
 
-        final double padding = isMobile ? 12.0 : isTablet ? 20.0 : 28.0;
-        final double bannerHeight = isMobile ? 72.0 : isTablet ? 100.0 : 130.0;
+        final double padding = isMobile
+            ? 12.0
+            : isTablet
+            ? 20.0
+            : 28.0;
+        final double bannerHeight = isMobile
+            ? 72.0
+            : isTablet
+            ? 100.0
+            : 130.0;
 
         return Scaffold(
           backgroundColor: Colors.transparent,
@@ -205,13 +248,15 @@ class AdminPageLayout extends StatelessWidget {
                       alignment: Alignment.bottomLeft,
                       child: Text(
                         title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
+                        style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: isMobile ? 20 : isTablet ? 24 : 28,
+                              fontSize: isMobile
+                                  ? 20
+                                  : isTablet
+                                  ? 24
+                                  : 28,
                             ),
                       ),
                     ),
@@ -222,7 +267,7 @@ class AdminPageLayout extends StatelessWidget {
                   // ── Subtitle (hidden on mobile to save space) ────────────
                   if (!isMobile)
                     Text(
-                      'Manage the restaurant menu used by the kiosk.',
+                      subtitle ?? 'Manage the restaurant kiosk.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),

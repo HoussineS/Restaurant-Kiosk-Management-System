@@ -253,11 +253,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
-                      Icons.tune,
-                      size: 20,
-                      color: colorScheme.primary,
-                    ),
+                    Icon(Icons.tune, size: 20, color: colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       'Supplements / Options',
@@ -390,7 +386,9 @@ class _ModifierRowWidget extends StatelessWidget {
               isDense: true,
             ),
             validator: (value) {
-              final price = double.tryParse(value ?? '');
+              final price = (value == null || value.trim().isEmpty)
+                  ? 0.0
+                  : double.tryParse(value);
               if (price == null) {
                 return 'Invalid price';
               }

@@ -17,16 +17,12 @@ class OrderLocalDataSource {
     final now = DateTime.now();
 
     return database.transaction((txn) async {
-      final orderId = await txn.insert(
-        'orders',
-        {
-          'order_number': orderNumber,
-          'total_price': totalPrice,
-          'status': OrderStatus.pending.name,
-          'created_at': now.toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.abort,
-      );
+      final orderId = await txn.insert('orders', {
+        'order_number': orderNumber,
+        'total_price': totalPrice,
+        'status': OrderStatus.pending.name,
+        'created_at': now.toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.abort);
 
       final savedItems = <OrderItem>[];
       for (final item in items) {
@@ -48,11 +44,13 @@ class OrderLocalDataSource {
           savedModifiers.add(mod.copyWith(id: modId, orderItemId: itemId));
         }
 
-        savedItems.add(item.copyWith(
-          id: itemId, 
-          orderId: orderId,
-          modifiers: savedModifiers,
-        ));
+        savedItems.add(
+          item.copyWith(
+            id: itemId,
+            orderId: orderId,
+            modifiers: savedModifiers,
+          ),
+        );
       }
 
       return Order(
@@ -66,18 +64,18 @@ class OrderLocalDataSource {
     });
   }
 
-  Future<List<Order>> getOrders({DateTime? startDate, DateTime? endDate}) async {
+  Future<List<Order>> getOrders({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     final database = await _appDatabase.database;
-    
+
     String? whereClause;
     List<Object?>? whereArgs;
 
     if (startDate != null && endDate != null) {
       whereClause = 'created_at >= ? AND created_at <= ?';
-      whereArgs = [
-        startDate.toIso8601String(),
-        endDate.toIso8601String(),
-      ];
+      whereArgs = [startDate.toIso8601String(), endDate.toIso8601String()];
     } else if (startDate != null) {
       whereClause = 'created_at >= ?';
       whereArgs = [startDate.toIso8601String()];
@@ -105,39 +103,47 @@ class OrderLocalDataSource {
       final items = <OrderItem>[];
       for (final r in itemRows) {
         final itemId = r['id'] as int;
-        
+
         final modifierRows = await database.query(
           'order_item_modifiers',
           where: 'order_item_id = ?',
           whereArgs: [itemId],
         );
-        
-        final modifiers = modifierRows.map((m) => OrderItemModifier(
-          id: m['id'] as int,
-          orderItemId: itemId,
-          name: m['name'] as String,
-          extraPrice: (m['extra_price'] as num).toDouble(),
-        )).toList();
 
-        items.add(OrderItem(
-          id: itemId,
-          orderId: orderId,
-          productId: r['product_id'] as int,
-          productName: r['product_name'] as String,
-          quantity: r['quantity'] as int,
-          unitPrice: r['unit_price'] as double,
-          modifiers: modifiers,
-        ));
+        final modifiers = modifierRows
+            .map(
+              (m) => OrderItemModifier(
+                id: m['id'] as int,
+                orderItemId: itemId,
+                name: m['name'] as String,
+                extraPrice: (m['extra_price'] as num).toDouble(),
+              ),
+            )
+            .toList();
+
+        items.add(
+          OrderItem(
+            id: itemId,
+            orderId: orderId,
+            productId: r['product_id'] as int,
+            productName: r['product_name'] as String,
+            quantity: r['quantity'] as int,
+            unitPrice: (r['unit_price'] as num).toDouble(),
+            modifiers: modifiers,
+          ),
+        );
       }
 
-      orders.add(Order(
-        id: orderId,
-        orderNumber: row['order_number'] as String,
-        totalPrice: row['total_price'] as double,
-        status: OrderStatus.fromString(row['status'] as String),
-        createdAt: DateTime.parse(row['created_at'] as String),
-        items: items,
-      ));
+      orders.add(
+        Order(
+          id: orderId,
+          orderNumber: row['order_number'] as String,
+          totalPrice: (row['total_price'] as num).toDouble(),
+          status: OrderStatus.fromString(row['status'] as String),
+          createdAt: DateTime.parse(row['created_at'] as String),
+          items: items,
+        ),
+      );
     }
 
     return orders;
@@ -155,10 +161,6 @@ class OrderLocalDataSource {
 
   Future<void> deleteOrder(int orderId) async {
     final database = await _appDatabase.database;
-    await database.delete(
-      'orders',
-      where: 'id = ?',
-      whereArgs: [orderId],
-    );
+    await database.delete('orders', where: 'id = ?', whereArgs: [orderId]);
   }
 }

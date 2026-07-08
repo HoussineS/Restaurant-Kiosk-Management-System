@@ -11,7 +11,6 @@ import '../widgets/empty_state.dart';
 import '../widgets/error_panel.dart';
 import '../widgets/product_form_dialog.dart';
 
-
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
 
@@ -22,6 +21,7 @@ class ProductsScreen extends ConsumerWidget {
 
     return AdminPageLayout(
       title: 'Product Management',
+      subtitle: 'Manage menu items, images, prices, availability, and options.',
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'products_fab',
         onPressed: categoriesState.maybeWhen(
@@ -124,7 +124,6 @@ class ProductsScreen extends ConsumerWidget {
                   );
                 },
               );
-
             },
           );
         },
@@ -323,9 +322,7 @@ class _HorizontalCard extends StatelessWidget {
                           product.name,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
+                          style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -342,10 +339,11 @@ class _HorizontalCard extends StatelessWidget {
                         categoryName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                       if (product.modifiers.isNotEmpty) ...[
                         const SizedBox(height: 2),
@@ -354,14 +352,19 @@ class _HorizontalCard extends StatelessWidget {
                             Icon(
                               Icons.tune,
                               size: 11,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 3),
                             Text(
                               '${product.modifiers.length} supplement${product.modifiers.length == 1 ? '' : 's'}',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                           ],
                         ),
@@ -372,9 +375,12 @@ class _HorizontalCard extends StatelessWidget {
                           product.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ],
                     ],
@@ -386,9 +392,8 @@ class _HorizontalCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           '${product.price.toStringAsFixed(2)} TND',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -488,10 +493,13 @@ class _VerticalCard extends StatelessWidget {
                               categoryName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
                           ),
                           _AvailabilityChip(available: product.available),
@@ -506,9 +514,8 @@ class _VerticalCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           '${product.price.toStringAsFixed(2)} TND',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -624,4 +631,3 @@ class _AvailabilityChip extends StatelessWidget {
     );
   }
 }
-

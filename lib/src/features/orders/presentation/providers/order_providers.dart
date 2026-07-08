@@ -18,20 +18,26 @@ final orderRepositoryProvider = Provider<OrderRepository>((ref) {
   return SqliteOrderRepository(ref.watch(orderLocalDataSourceProvider));
 });
 
+final allOrdersProvider = FutureProvider<List<Order>>((ref) {
+  return ref.watch(orderRepositoryProvider).getOrders();
+});
+
 // ─── Cart (in-memory, ephemeral) ─────────────────────────────────────────────
 
 class CartNotifier extends Notifier<List<OrderItem>> {
   @override
   List<OrderItem> build() => [];
 
-  void addProduct(Product product, {List<ProductModifier> chosenModifiers = const []}) {
+  void addProduct(
+    Product product, {
+    List<ProductModifier> chosenModifiers = const [],
+  }) {
     final productId = product.id;
     if (productId == null) return;
 
-    final orderItemModifiers = chosenModifiers.map((m) => OrderItemModifier(
-      name: m.name,
-      extraPrice: m.extraPrice,
-    )).toList();
+    final orderItemModifiers = chosenModifiers
+        .map((m) => OrderItemModifier(name: m.name, extraPrice: m.extraPrice))
+        .toList();
 
     // Check if an exact match (same product & same modifiers) exists
     final existingIndex = state.indexWhere((i) {
@@ -40,7 +46,8 @@ class CartNotifier extends Notifier<List<OrderItem>> {
       // Simple name check is enough for equality here
       final existingNames = i.modifiers.map((m) => m.name).toSet();
       final newNames = orderItemModifiers.map((m) => m.name).toSet();
-      return existingNames.containsAll(newNames) && newNames.containsAll(existingNames);
+      return existingNames.containsAll(newNames) &&
+          newNames.containsAll(existingNames);
     });
 
     if (existingIndex >= 0) {
@@ -126,20 +133,36 @@ class OrdersController extends AsyncNotifier<List<Order>> {
 
   Future<List<Order>> _fetchOrders() {
     final dateRange = ref.read(orderFilterProvider);
+    final searchQuery = ref.read(orderSearchProvider).toLowerCase();
+    final statusFilter = ref.read(orderStatusFilterProvider);
     DateTime? endDate = dateRange?.end;
     if (endDate != null) {
       endDate = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
     }
-    return _repository.getOrders(
-      startDate: dateRange?.start,
-      endDate: endDate,
-    );
+    return _repository
+        .getOrders(startDate: dateRange?.start, endDate: endDate)
+        .then((orders) {
+          return orders.where((order) {
+            final matchesStatus =
+                statusFilter == null || order.status == statusFilter;
+            final matchesSearch =
+                searchQuery.isEmpty ||
+                order.orderNumber.toLowerCase().contains(searchQuery) ||
+                order.items.any(
+                  (item) =>
+                      item.productName.toLowerCase().contains(searchQuery),
+                );
+            return matchesStatus && matchesSearch;
+          }).toList();
+        });
   }
 
   @override
   Future<List<Order>> build() {
     _repository = ref.watch(orderRepositoryProvider);
     ref.watch(orderFilterProvider); // re-fetch when filter changes
+    ref.watch(orderSearchProvider);
+    ref.watch(orderStatusFilterProvider);
     return _fetchOrders();
   }
 
@@ -157,7 +180,7 @@ class OrdersController extends AsyncNotifier<List<Order>> {
   Future<Order?> placeOrder(List<OrderItem> items) async {
     if (items.isEmpty) return null;
     final total = items.fold(0.0, (s, i) => s + i.subtotal);
-    final currentOrders = state.asData?.value ?? [];
+    final currentOrders = await _repository.getOrders();
     final orderNumber = _generateOrderNumber(currentOrders);
 
     state = const AsyncLoading();
@@ -167,6 +190,7 @@ class OrdersController extends AsyncNotifier<List<Order>> {
         totalPrice: total,
         items: items,
       );
+      ref.invalidate(allOrdersProvider);
       return _fetchOrders();
     });
 
@@ -186,6 +210,7 @@ class OrdersController extends AsyncNotifier<List<Order>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await _repository.updateOrderStatus(orderId, status);
+      ref.invalidate(allOrdersProvider);
       return _fetchOrders();
     });
   }
@@ -194,12 +219,11 @@ class OrdersController extends AsyncNotifier<List<Order>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await _repository.deleteOrder(orderId);
+      ref.invalidate(allOrdersProvider);
       return _fetchOrders();
     });
   }
 }
 
 final ordersControllerProvider =
-    AsyncNotifierProvider<OrdersController, List<Order>>(
-      OrdersController.new,
-    );
+    AsyncNotifierProvider<OrdersController, List<Order>>(OrdersController.new);
